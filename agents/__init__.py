@@ -1,4 +1,4 @@
-"""Baselines and the self-play league. Owner B, Phase 2.
+"""Baselines and the self-play league (learning layer).
 
 Planned modules:
   baselines.py   random / static / greedy / tabular Q at the abstraction fixed in

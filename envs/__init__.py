@@ -1,4 +1,4 @@
-"""Gymnasium wrappers, belief filter and scripted opponents. Owner B, Phase 2.
+"""Gymnasium wrappers, belief filter and scripted opponents (learning layer).
 
 Planned modules:
   coach_env.py   SMDP wrapper + action_masks() returning a FLAT length-20 array

@@ -1,8 +1,7 @@
-"""Sim-vs-real calibration — the Part C deliverable and a Gate 1 condition.
+"""Sim-vs-real calibration — the evidence that the environment models reality.
 
-Per plan section 3.2: *"Publishing this table is worth more marks than any amount
-of reward-curve polish: it is the evidence that your environment models a
-real-world problem context."*
+Publishing this table matters more than any amount of reward-curve polish: it
+is the evidence that the environment models a real-world problem context.
 
 Two entry points:
 
@@ -12,7 +11,7 @@ Two entry points:
 The sweep exists because the tuning knobs are **coupled**: making passing riskier
 pushes the option softmax toward shooting, so tuning them one at a time oscillates
 without converging. Coordinate descent over a shared loss is both faster and far
-more defensible in the report than hand-picked constants.
+more defensible in the write-up than hand-picked constants.
 """
 
 from __future__ import annotations
@@ -218,7 +217,7 @@ GRID = {
     "carry_speed": [0.40, 0.48],
 }
 
-#: The coarse grid that found the current operating point is kept for the report's
+#: The coarse grid that found the current operating point is kept for the write-up's
 #: methods section — the search history is evidence, not clutter.
 COARSE_GRID = {
     "epv_max": [0.40, 0.45, 0.55],

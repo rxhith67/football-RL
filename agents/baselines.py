@@ -1,6 +1,6 @@
 """Baseline coaches — the ranking any learned policy must beat.
 
-Four of them, matching the algorithm table in plan section 3.5:
+Four of them, matching the algorithm table in design note 3.5:
 
 * `RandomCoach`  — samples a legal tactic each epoch. The floor.
 * `StaticCoach`  — picks one plan at kickoff and never changes. Surprisingly
@@ -8,7 +8,7 @@ Four of them, matching the algorithm table in plan section 3.5:
 * `GreedyCoach`  — hand-written heuristic: chase when behind, shut up shop when
   ahead, rest legs when tired. What a competent human would script.
 * `TabularQCoach` — Q-learning over the *declared* abstraction in
-  config/train.yaml. It will lose, and why it loses is the report paragraph:
+  config/train.yaml. It will lose, and why it loses is the write-up paragraph:
   the abstraction throws away tempo, per-player fatigue and — critically — the
   belief *entropy*, keeping only the MAP archetype, so it cannot hedge under
   uncertainty the way the deep policy can.

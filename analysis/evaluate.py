@@ -1,7 +1,7 @@
 """Match harness, bootstrap CIs and Elo — the pre-registered evaluation protocol.
 
-Plan section 5 fixes this BEFORE training, because sloppy evaluation is the most
-common way these projects lose marks. Everything here reports uncertainty: a
+design note 5 fixes this BEFORE training, because sloppy evaluation is the most
+common way simulation studies mislead. Everything here reports uncertainty: a
 number without an interval is not a result.
 
 Headline metrics

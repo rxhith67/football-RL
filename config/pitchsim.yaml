@@ -1,5 +1,5 @@
 # GAFFER-RL — PITCHSIM physics and event-layer constants.
-# FROZEN in Phase 0 (plan section 3.2). Tier 1 fields are used by the Phase-1
+# FROZEN in Phase 0 (design note 3.2). Tier 1 fields are used by the Phase-1
 # gated build; Tier 2 fields are consumed only once the un-gated layer lands.
 
 version: 1
@@ -45,7 +45,7 @@ ball:
   max_pass_speed_mps: 26.0
   aerial_flight_time_s: [0.8, 2.2]
 
-# Expected-value scoring for on-ball option selection (plan section 3.2).
+# Expected-value scoring for on-ball option selection (design note 3.2).
 # These weights are the second calibration knob after config/tactics.yaml modifiers.
 event_layer:
   options: [short_pass, long_pass, dribble, shot, clearance]
@@ -76,7 +76,7 @@ xg:
 # shooting and dribbling, so hand-tuning them one at a time chases its own tail.
 # They are swept jointly by `python -m pitchsim.calibrate --sweep`, which is the
 # defensible way to hit the acceptance bands and produces the sim-vs-real table
-# that Part C reports.
+# reported in the calibration table.
 # ---------------------------------------------------------------------------
 # Output of `--sweep` (coordinate descent, 3 seeds averaged, 40 matches each,
 # 15 Aug 2026), re-run AFTER the stamina bug fix. Search loss 1.80 -> 0.00:
@@ -85,7 +85,7 @@ xg:
 #
 # Do NOT hand-edit these without re-running the sweep. They are strongly coupled:
 # making passing riskier pushes the option softmax toward shooting, so moving one
-# knob alone undoes the others. Two lessons are worth keeping in the report:
+# knob alone undoes the others. Two lessons are worth keeping in the write-up:
 #   * `tackle_base` dominates — at its original 1.45 an attack was unstoppable.
 #   * The pre-fix operating point was silently compensating for exhausted players
 #     moving at the speed floor. Fixing stamina invalidated it and forced this
@@ -126,7 +126,7 @@ set_pieces:
   throw_in_retention: 0.72
 
 # ---------------------------------------------------------------------------
-# Calibration acceptance bands — Gate 1 conditions (plan section 3.2 table).
+# Calibration acceptance bands — Gate 1 conditions (design note 3.2 table).
 # `calibrate.py` emits sim-vs-real and pass/fail against exactly these.
 #
 # `real` values are MEASURED from the 8,536-shot / 350-match StatsBomb sample
@@ -140,7 +140,7 @@ calibration:
     shots_per_team:       {real: 12.19, band: [9.0, 15.0]}
     xg_per_shot:          {real: 0.0985, band: [0.08, 0.13]}
     # Pass completion is not yet measured — the shot table does not carry passes.
-    # Owner A: measure it during Phase 1 before relying on this band.
+    # TODO: measure this before relying on the band.
     pass_completion:      {real: 0.80, band: [0.72, 0.88], measured: false}
   symmetry:
     # Neutral venue, so the null hypothesis is home_win_rate == away_win_rate.

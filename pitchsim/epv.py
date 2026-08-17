@@ -1,10 +1,10 @@
 """Expected possession value — the "how good is the ball here?" surface.
 
 The event layer scores every on-ball option as `pitch_control(target) x EPV(target)`
-minus a risk term (plan section 3.2), so EPV is what makes a switch to a free
+minus a risk term (design note 3.2), so EPV is what makes a switch to a free
 winger worth more than a square pass to a covered centre-back.
 
-This is a *proxy*, and the report must say so. A properly fitted expected-threat
+This is a *proxy*, and the write-up must say so. A properly fitted expected-threat
 model needs possession-chain data, which the shot table does not carry. Instead
 the grid blends two quantities that are grounded:
 

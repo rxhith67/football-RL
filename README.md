@@ -4,7 +4,6 @@
 run of play, counter-punches with macro-tactical changes, and can be challenged
 live by a human coach.*
 
-UTS AT3 · group of 3, individually assessed · **due 23 Oct 2026**
 Full design document: [`GAFFER_RL_Research_and_Plan.md`](GAFFER_RL_Research_and_Plan.md)
 
 ---
@@ -35,8 +34,8 @@ it from observable statistics (PPDA, field tilt, pass profile).
 
 ## Ownership
 
-Individually assessed, so boundaries are explicit. Everyone must be able to
-defend the **whole** system in the viva — weekly 30-minute cross-explain sessions
+independently owned, so boundaries are explicit. Everyone must be able to
+defend the **whole** system in review — weekly 30-minute cross-explain sessions
 are mandatory.
 
 | Owner | Area | Directories |
@@ -50,7 +49,7 @@ full `PitchSim` interface with a cheap generative model, so B and C build agains
 a working API from day one rather than waiting on the physics. When the real
 engine lands it drops in behind an unchanged interface.
 
-> ⚠️ **Nothing produced by `StubPitchSim` may appear in the report as a result.**
+> ⚠️ **Nothing produced by `StubPitchSim` may appear in the write-up as a result.**
 > `StubPitchSim.IS_STUB is True` exists so that downstream code and figures can
 > assert against it.
 
@@ -102,7 +101,7 @@ Phases are gated by **evidence**, not dates. Full detail in §6 of the plan.
 
 A random coach topping the table is a red flag, not a result: it means constant
 tactic churn beats any committed plan, which follows from the matchup term being
-the dominant signal. Plan section 6.2 requires "baselines produce a sane ranking"
+the dominant signal. design note 6.2 requires "baselines produce a sane ranking"
 before Gate 2, so this is unresolved.
 
 **Gate 1 is the project's only real go/no-go.** All four must hold: a match that
@@ -153,11 +152,11 @@ config/         pitchsim.yaml · tactics.yaml · train.yaml   (FROZEN in Phase 0
 pitchsim/       types.py base.py replay.py  <- the shared contract
                 stub.py                     <- Phase 0 placeholder engine
                 statsbomb.py xg.py          <- real-data grounding
-                engine.py controller.py     <- Phase 1 (owner A)
-envs/           coach_env.py belief.py archetypes.py        (Phase 2, owner B)
-agents/         baselines.py league.py                      (Phase 2, owner B)
-analysis/       egta.py evaluate.py figures.py              (Phase 2–3, owner C)
-console/        server.py static/                           (Phase 2, owner C)
+                engine.py controller.py     <- Phase 1 (the engine layer)
+envs/           coach_env.py belief.py archetypes.py        (Phase 2, the learning layer)
+agents/         baselines.py league.py                      (Phase 2, the learning layer)
+analysis/       egta.py evaluate.py figures.py              (Phase 2–3, the interface layer)
+console/        server.py static/                           (Phase 2, the interface layer)
 scripts/        check_gate.py                               (all phases)
 tests/          test_contract.py                            (guards the interfaces)
 ```
@@ -190,7 +189,7 @@ matches), the ≥ 500-match evaluation cells, and the seed sweeps.
 
 Uses [StatsBomb open data](https://github.com/statsbomb/open-data) for the xG fit
 and calibration targets. If this repository is made public, StatsBomb's terms
-require attribution — keep this section intact and cite them in the report.
+require attribution — keep this section intact and cite them in the write-up.
 
 Cached raw data lives in `data/statsbomb/raw/` and is **git-ignored**; regenerate
 with the fetch command above.

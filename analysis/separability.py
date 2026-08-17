@@ -1,4 +1,4 @@
-"""Archetype separability — a Gate 1 condition (plan section 3.2).
+"""Archetype separability — a Gate 1 condition (design note 3.2).
 
 Can the K opponent archetypes be told apart from their observable footprint
 alone? If not, the belief filter has nothing to infer and **Pillar 1 collapses**,
@@ -77,7 +77,7 @@ def collect_windows(
 def gaussian_confusion(
     x: np.ndarray, y: np.ndarray, seed: int = 0
 ) -> tuple[np.ndarray, float, np.ndarray]:
-    """Fit the per-archetype Gaussians of plan section 3.4 and score them.
+    """Fit the per-archetype Gaussians of design note 3.4 and score them.
 
     This is the *same* model the online belief filter uses, so the accuracy here
     is a direct estimate of how well that filter can possibly do — not a proxy

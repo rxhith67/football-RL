@@ -1,6 +1,6 @@
 """GAFFER Console backend — FastAPI over the replay format.
 
-Two-process design (plan section 4): the browser animates a *pre-computed*
+Two-process design (design note 4): the browser animates a *pre-computed*
 replay, so real-time rendering never fights a server round-trip. Scrubbing a
 recorded match is also a better demo than live animation — on stage you can jump
 straight to the interesting moment.

@@ -6,12 +6,12 @@ Two jobs, deliberately split by phase:
   non-transitive rock-paper-scissors cycle exist among the scripted archetypes at
   all? It needs no RL and runs in minutes. If the answer is no, Pillar 2 has no
   headline result and the EV counters in `config/tactics.yaml` must be retuned —
-  which is a Phase-1 problem, not a Phase-3 catastrophe (plan section 3.5).
+  which is a Phase-1 problem, not a Phase-3 catastrophe (design note 3.5).
 
 * `payoff_matrix` / `nash` / `alpha_rank` (**Phase 3**) run the full analysis over
   archetypes plus trained checkpoints.
 
-A note the report must keep: the counters in `config/tactics.yaml` were *designed*
+A note the write-up must keep: the counters in `config/tactics.yaml` were *designed*
 to admit a cycle. The honest framing is "we built an environment that admits
 non-transitivity, then asked whether the RL coach discovers and exploits it" —
 never "we discovered football is non-transitive".
@@ -161,7 +161,7 @@ def run(matches: int | None = None, seed: int = 0, verbose: bool = True) -> dict
             best = int(np.argmax(goal_diff.mean(axis=1)))
             print(f"  No cycle: '{labels[best]}' dominates. Pillar 2 has no headline")
             print("  result until the counters in config/tactics.yaml are retuned")
-            print("  (see the counter table in plan section 3.5).")
+            print("  (see the counter table in design note 3.5).")
 
     result = {
         "labels": labels,

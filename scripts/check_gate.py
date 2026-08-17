@@ -1,6 +1,6 @@
 """Phase gate checker.
 
-The plan's phases advance on *evidence*, not on dates (plan section 6.2). This
+The plan's phases advance on *evidence*, not on dates (design note 6.2). This
 script is what makes that real: each gate is a set of mechanical checks that
 either pass or fail, so "are we ready for Phase 2?" has an answer nobody has to
 argue about in a group meeting.
@@ -210,7 +210,7 @@ def gate_3() -> list[Check]:
                  "200k macro-steps, 3 seeds, 500 eval matches — budget goes in the caption"),
         _pending("All ablations run",
                  "belief/blind/oracle/recurrent · shaping w sweep · masking · gamma^tau"),
-        _pending("FEATURE FREEZE 15 Oct", "every number in the report exists on disk"),
+        _pending("FEATURE FREEZE 15 Oct", "every number in the write-up exists on disk"),
     ]
 
 
@@ -218,7 +218,7 @@ def gate_4() -> list[Check]:
     return [
         _pending("Demo runs offline on the presenting laptop", "network cable pulled"),
         _pending("Rehearsed 3x on the actual hardware", ""),
-        _pending("Viva Q&A bank complete",
+        _pending("review Q&A bank complete",
                  "SMDP discounting · potential-based shaping · non-transitivity · POMDP belief"),
     ]
 

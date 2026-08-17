@@ -5,12 +5,12 @@
     python train.py --baselines                        # ranking without any learning
     python train.py --ablation                         # blind / bayesian / oracle
 
-Stages follow plan section 3.5. Every run writes a checkpoint plus a JSON record
+Stages follow design note 3.5. Every run writes a checkpoint plus a JSON record
 of its evaluation so the figures can be rebuilt without retraining.
 
 The learner is `SMDPMaskablePPO`: MaskablePPO with the semi-Markov discount
-gamma^tau (plan section 3.3). Flat-gamma is available as an ablation via
-`--flat-gamma`, which is the comparison the report needs rather than an
+gamma^tau (design note 3.3). Flat-gamma is available as an ablation via
+`--flat-gamma`, which is the comparison the write-up needs rather than an
 implementation detail.
 """
 
@@ -94,7 +94,7 @@ def run_baselines(n_envs: int = 32, n_matches: int = 200, seed: int = 0) -> dict
 
 def run_ablation(steps: int = 60_000, n_envs: int = 32, n_matches: int = 200,
                  seed: int = 0) -> dict:
-    """Blind vs Bayesian vs oracle — the paper-shaped result (plan section 3.4)."""
+    """Blind vs Bayesian vs oracle — the paper-shaped result (design note 3.4)."""
     results = {}
     for mode in ("blind", "bayesian", "oracle"):
         model, env, _ = train(stage=1, steps=steps, n_envs=n_envs,

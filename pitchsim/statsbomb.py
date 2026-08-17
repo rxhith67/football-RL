@@ -6,7 +6,7 @@ repository is public, the StatsBomb attribution requirement applies and is
 carried in the README).
 
 Everything is cached under `data/statsbomb/raw/` so a fit is reproducible offline
-and the demo never depends on the network (plan section 6.2, Gate 4).
+and the demo never depends on the network (design note 6.2, Gate 4).
 
 CLI::
 

@@ -1,7 +1,7 @@
 """The PITCHSIM interface. Implemented twice: by the stub (Phase 0) and by the
 real engine (Phase 1).
 
-Owner B's Gymnasium wrapper and owner C's console/harness import *this*, never a
+The Gymnasium wrapper and the console/harness import *this*, never a
 concrete class, so the real engine drops in behind an unchanged interface.
 
 Plan reference: section 6.1 ("break the serial dependency on day one").

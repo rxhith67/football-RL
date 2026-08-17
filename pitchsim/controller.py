@@ -5,7 +5,7 @@ Sutton, Precup and Singh (1999), the coach learns a policy *over options* whose
 intra-option policies are given. Saying so converts "we didn't train the players"
 from a weakness into a design decision with a citation, and it is written into
 the spec precisely so that scope creep into player-level learning can be refused
-(plan sections 3.1 and 7).
+(design note 3.1 and 7).
 
 Everything is batched over matches: arrays are shaped (B, 2, 11, ...) for
 [match, side, player]. Home (index 0) attacks +x; away attacks -x.
@@ -273,7 +273,7 @@ def update_stamina(
     """Drain with effort, recover when the team has the ball.
 
     Convention: 1 = FRESH, 0 = EXHAUSTED — the inverse of GRF's `tired_factor`,
-    whose sign the original draft inverted (plan section 1, row 6).
+    whose sign the original draft inverted (design note 1, row 6).
     """
     mods = modifier_tables()
     drain_mult = mods["stamina_drain"][press_idx][..., None]        # (B, 2, 1)

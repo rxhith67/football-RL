@@ -2,7 +2,7 @@
 
 The opposing manager's plan is hidden state. Only its statistical footprint is
 observable, so the coach maintains a posterior over K archetypes and conditions
-its policy on that posterior (plan section 3.4):
+its policy on that posterior (design note 3.4):
 
     b_{k+1}(j)  ∝  sum_i b_k(i) T(i -> j) * N(o_k ; mu_j, Sigma_j)
 

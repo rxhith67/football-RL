@@ -1,7 +1,7 @@
 # GAFFER-RL — Research Review & Implementation Plan
 
-**Football tactical RL for UTS 41118/42028-style AT3 (Group of 3, individually assessed, due 23 Oct 2026)**
-Prepared 14 Aug 2026. Supersedes `football idea.txt` (the "DeepCoach-RL" draft).
+**Research review and implementation plan for tactical football RL**
+Prepared 14 Aug 2026. Supersedes an earlier "DeepCoach-RL" draft.
 Revised 15 Aug 2026 — phase-based plan, evidence gates, separability and non-transitivity made testable early, compute strategy.
 
 ---
@@ -10,7 +10,7 @@ Revised 15 Aug 2026 — phase-based plan, evidence gates, separability and non-t
 
 **The *concept* in your Gemini draft is good. The *substrate* is broken.**
 
-The good idea: stop doing frame-by-frame player control, and instead have an RL agent act as a **coach** that issues macro-tactical directives at a handful of decision points per match (a Semi-Markov Decision Process / options framing). That is genuinely under-explored, it collapses the credit-assignment horizon, it runs on a laptop, and it produces something a human can *watch and argue with* — which is exactly what a demo-and-viva assessment rewards.
+The good idea: stop doing frame-by-frame player control, and instead have an RL agent act as a **coach** that issues macro-tactical directives at a handful of decision points per match (a Semi-Markov Decision Process / options framing). That is genuinely under-explored, it collapses the credit-assignment horizon, it runs on a laptop, and it produces something a human can *watch and argue with* — which is exactly what a demo-and-review evaluation rewards.
 
 The broken part: **Google Research Football (GRF) physically cannot execute that action space.** GRF's `step()` accepts one of 19 low-level player actions. It has no substitutions, no mid-match formation switching, no pressing parameter, and no xG. Roughly 60% of the draft's code would throw on first run, and the rest computes the wrong thing (details in §1). GRF is also Linux-only, needs a C++ build, and is effectively unmaintained.
 
@@ -24,7 +24,7 @@ The broken part: **Google Research Football (GRF) physically cannot execute that
 > 2. **Empirical game-theoretic analysis of the tactic space.** Build the payoff matrix over tactical archetypes, compute Nash / α-Rank, and show that football's "rock–paper–scissors" structure exists in your sim and that the RL coach approximates a best-response *mixture* rather than a single dominant plan. This is the reportable scientific result.
 > 3. **Human-in-the-loop adversarial demo.** The GUI lets a human be the *opposing manager* in real time, plus a counterfactual "what-if" panel that rewinds to minute *X*, forces a different tactic, and re-simulates to show the win-probability shift.
 >
-> **Why it wins marks:** it satisfies the assignment's "develop a custom Gym environment" route explicitly, the GUI is the point rather than a bolt-on, the compute fits Colab CPU, every claim is falsifiable, and the viva questions (SMDP discounting, potential-based shaping, self-play non-transitivity, POMDP belief states) all have crisp answers baked into the design.
+> **Why it is compelling:** it satisfies the assignment's "develop a custom Gym environment" route explicitly, the GUI is the point rather than a bolt-on, the compute fits Colab CPU, every claim is falsifiable, and review questions (SMDP discounting, potential-based shaping, self-play non-transitivity, POMDP belief states) all have crisp answers baked into the design.
 
 If the sim build slips, there is a fully-specified fallback (§9, Option B: adversarial set-piece RL on StatsBomb 360 data) that reuses ~40% of the code. The plan is organised into five evidence-gated phases (§6), with the single real go/no-go at the end of the environment phase.
 
@@ -78,15 +78,15 @@ Three observations after going through the above:
 
 1. **Everyone works at one of two extremes.** Either micro-control of players in a physics engine (GRF, TiZero, LCDSP), or offline analytics on real data (TacticAI, offline-RL outcome models). The *manager's* layer — formation, block height, press intensity, tempo, substitutions, over the course of a match — is almost untouched as an RL control problem, despite being the layer humans actually argue about.
 2. **Opponent tactics are treated as observed.** Self-play work conditions on raw state; analytics work conditions on data you already have. Nobody makes the agent *infer the opposing manager's plan from the run of play and act on that belief*. In real coaching this is the entire job.
-3. **Nothing is both reproducible and watchable.** TacticAI: no code. GRF work: needs a cluster. The 2026 corner-kick RL paper: no released code. A small, open, fast environment with a coach's console is a real contribution at the coursework level, and it is precisely what the "Environment/GUI Design" and "Demo" deliverables reward.
+3. **Nothing is both reproducible and watchable.** TacticAI: no code. GRF work: needs a cluster. The 2026 corner-kick RL paper: no released code. A small, open, fast environment with a coach's console is a real contribution at the project level, and it is precisely what the "Environment/GUI Design" and "Demo" deliverables reward.
 
-That triple is your differentiation paragraph in the report, almost verbatim.
+That triple is your differentiation paragraph in the write-up, almost verbatim.
 
 ---
 
 ## 3. The project: GAFFER-RL
 
-**Elevator pitch (for Part A abstract):**
+**Elevator pitch (for deliverable abstract):**
 > Modern football-AI research either controls individual players in expensive physics simulators or analyses historical data offline; the manager's decision layer — shape, block height, press, tempo, substitutions — has been largely ignored as a control problem. GAFFER-RL formulates in-match coaching as a partially-observable Semi-Markov Decision Process over a fast, calibrated 2D football simulator. The agent makes ~18 macro-decisions per match, cannot see the opposing manager's game plan, and must infer it from observable match statistics. We train with maskable PPO under prioritised fictitious self-play, analyse the resulting tactic space with empirical game theory, and deliver a coach's console in which a human can manage the opposing side against the trained agent in real time.
 
 ### 3.1 Architecture
@@ -117,7 +117,7 @@ That triple is your differentiation paragraph in the report, almost verbatim.
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-The player layer is a **fixed, hand-written intra-option policy**. This is not a cop-out — it is exactly the options framework (Sutton, Precup & Singh 1999): the coach learns a policy *over* options whose internal policies are given. Say this explicitly in the report and the viva; it converts "we didn't train the players" from a weakness into a design decision with a citation.
+The player layer is a **fixed, hand-written intra-option policy**. This is not a cop-out — it is exactly the options framework (Sutton, Precup & Singh 1999): the coach learns a policy *over* options whose internal policies are given. Say this explicitly in the write-up and review; it converts "we didn't train the players" from a weakness into a design decision with a citation.
 
 ### 3.2 PITCHSIM specification
 
@@ -138,7 +138,7 @@ The environment is the project. Freeze this spec in Phase 0 and do not extend it
 - Set pieces: corners, throw-ins, free kicks handled as simplified restarts (fixed xG lottery + restart possession). Do not over-model these; they are Option B's territory.
 - Fouls/cards: Poisson rate scaling with press intensity — this is what makes gegenpress genuinely risky.
 
-**Calibration targets** (Part C deliverable — a table of sim vs real)
+**Calibration targets** (deliverable deliverable — a table of sim vs real)
 
 Real-world values below are **measured**, not quoted from memory: 8,536 shots
 across 350 matches of StatsBomb open data (La Liga, Premier League, Bundesliga,
@@ -157,11 +157,11 @@ Euro 2020, WC 2022, WWC 2023, WEuro 2022), extracted 15 Aug 2026. Regenerate wit
 
 **Archetype separability is a first-class calibration target, not an afterthought.** The parameters that make the sim *realistic* are the same ones that make tactics *distinguishable*, and they pull against each other: a sim tuned only for 2.7 goals/match can easily end up one where every archetype produces the same PPDA and field tilt, at which point the belief filter (Pillar 1) has nothing to read and the whole first pillar collapses. So tune both jointly, and measure separability with a concrete number: fit the per-archetype Gaussians of §3.4, classify held-out 15-minute windows, and require ≥ 70% MAP accuracy on the K-way confusion matrix — **with no archetype below 50% recall** (one indistinguishable pair is enough to hollow out the ablation). Produce this confusion matrix in Phase 1, *before* any RL code touches the belief vector.
 
-Publishing this table is worth more marks than any amount of reward-curve polish: it is the evidence that your environment models a *real-world problem context*, which is the stated intent of the assessment.
+Publishing this table is valuable than any amount of reward-curve polish: it is the evidence that your environment models a *real-world problem context*, which is the stated intent of the evaluation.
 
 **Performance target:** ≥ 300 simulated matches/minute on a Colab CPU with 32 vectorised environments. Profile at the end of Phase 1. If short, in order: raise `dt` to 0.4 s → shorten the match to 60 sim-minutes → drop to 16 envs with a C-accelerated inner loop via Numba. Horizontal scale-out (many CPU containers) is a separate lever and is covered in §6.4 — it helps evaluation and sweeps, not single-run training latency.
 
-### 3.3 The MDP (state this precisely in the report)
+### 3.3 The MDP (state this precisely in the write-up)
 
 **Decision epochs.** The coach acts at `t = 5, 10, …, 85` sim-minutes, **plus** on triggers: goal scored/conceded, red card, half-time, and "opponent tactic-shift detected" (belief entropy jump). This makes durations `τ_k` variable ⇒ genuine SMDP, so discount with `γ^{τ_k}` rather than a flat `γ`. Expect ~18–24 decisions per match.
 
@@ -190,11 +190,11 @@ Publishing this table is worth more marks than any amount of reward-curve polish
 R_k = R_terminal·1[k = final]  +  Φ(s_{k+1}) − Φ(s_k)  −  λ_fatigue·f_k  −  λ_churn·c_k
 ```
 - `R_terminal = +1 / 0 / −1` for win/draw/loss.
-- `Φ(s) = w·(xG_for − xG_against)` — a **potential-based shaping function** (Ng, Harada & Russell 1999). This is a real improvement over the draft's ad-hoc `α·ΔxG`: potential-based shaping is provably policy-invariant, so you get the variance reduction without changing the optimal policy. It is also a guaranteed viva question you will nail.
+- `Φ(s) = w·(xG_for − xG_against)` — a **potential-based shaping function** (Ng, Harada & Russell 1999). This is a real improvement over the draft's ad-hoc `α·ΔxG`: potential-based shaping is provably policy-invariant, so you get the variance reduction without changing the optimal policy. It is also a guaranteed review question you will nail.
 - `f_k` = mean squared stamina deficit below 0.35 (**correctly signed**, unlike the draft), `λ_fatigue ≈ 0.3`.
 - `c_k` = 1 if any tactic head changed, `λ_churn ≈ 0.02` — keeps the policy legible for the demo.
 
-**Reward scale — set `w` deliberately, and justify it in the report.** Φ telescopes, so over a full match the shaping term sums to `w·(xG_for − xG_against)|_final` regardless of path; with ~1.5 xG per team per match, a typical match-end xG difference is ≈ ±1.0 and a large one ≈ ±2.5. Choose `w` so that total shaping magnitude sits *below* the terminal reward: `w ≈ 0.3` gives typical shaping ≈ 0.3 against a terminal ±1. Too large and the agent optimises xG and shrugs at the scoreline (it will happily lose 0–1 while winning the xG battle); too small and shaping does nothing and you have merely added a hyperparameter. Report the sensitivity — `w ∈ {0, 0.15, 0.3, 0.6}` is a cheap, genuinely informative ablation, and "shaping did not help, here is the CI" is a perfectly good result.
+**Reward scale — set `w` deliberately, and justify it in the write-up.** Φ telescopes, so over a full match the shaping term sums to `w·(xG_for − xG_against)|_final` regardless of path; with ~1.5 xG per team per match, a typical match-end xG difference is ≈ ±1.0 and a large one ≈ ±2.5. Choose `w` so that total shaping magnitude sits *below* the terminal reward: `w ≈ 0.3` gives typical shaping ≈ 0.3 against a terminal ±1. Too large and the agent optimises xG and shrugs at the scoreline (it will happily lose 0–1 while winning the xG battle); too small and shaping does nothing and you have merely added a hyperparameter. Report the sensitivity — `w ∈ {0, 0.15, 0.3, 0.6}` is a cheap, genuinely informative ablation, and "shaping did not help, here is the CI" is a perfectly good result.
 
 **Partial observability.** The opponent's tactic vector is *never* in the observation. Only its statistical footprint is.
 
@@ -209,7 +209,7 @@ Two implementations, both cheap; do the first, report the second as an ablation:
 
 - Every scripted archetype opponent switches on its own schedule — a state-dependent rule (trailing at half-time ⇒ raise press and go direct; leading after minute 70 ⇒ drop the block), plus a small random switch hazard. This is also just more realistic; a manager who never reacts is not a manager.
 - The belief transition matrix in filter (1) must therefore be genuinely non-diagonal, and its off-diagonal mass is a hyperparameter worth reporting.
-- **This makes adaptation latency (§5, metric 4) a real metric**: not "how long to first identify" but "how long to *re-*identify after a switch", measured from the true switch epoch. That is the number the belief bars in the console visibly dramatise, and it is the one an examiner will remember.
+- **This makes adaptation latency (§5, metric 4) a real metric**: not "how long to first identify" but "how long to *re-*identify after a switch", measured from the true switch epoch. That is the number the belief bars in the console visibly dramatise, and it is the one an readers will remember.
 
 **The ablation table is the paper-shaped result of the project:**
 
@@ -240,9 +240,9 @@ So: as soon as the K archetypes run (Phase 1, immediately after the separability
 | Direct/long-ball → high press | direct balls bypass the press line entirely; the high line is exposed in behind |
 | Low block → direct/long-ball | numbers behind the ball absorb aerial route-one |
 
-That is two interlocking cycles, and it is exactly how football people describe the game — which makes it defensible rather than contrived. If the Phase-1 round-robin shows no cycle, retune the EV terms until one appears, and **document the tuning honestly in the report**: "we designed the environment to admit non-transitivity, then asked whether the RL coach discovers and exploits it" is a legitimate and clearly-stated experimental question. Claiming to have *discovered* a cycle you engineered is not — do not let the report drift into that.
+That is two interlocking cycles, and it is exactly how football people describe the game — which makes it defensible rather than contrived. If the Phase-1 round-robin shows no cycle, retune the EV terms until one appears, and **document the tuning honestly in the write-up**: "we designed the environment to admit non-transitivity, then asked whether the RL coach discovers and exploits it" is a legitimate and clearly-stated experimental question. Claiming to have *discovered* a cycle you engineered is not — do not let the write-up drift into that.
 
-**Algorithms to run** (the comparison the marking rubric wants):
+**Algorithms to run** (the comparison the evaluation criteria wants):
 
 | Algorithm | Role | Library |
 |---|---|---|
@@ -252,7 +252,7 @@ That is two interlocking cycles, and it is exactly how football people describe 
 | **MaskablePPO** | main method | `sb3-contrib` |
 | RecurrentPPO | belief ablation | `sb3-contrib` |
 
-**Tabular Q-learning — specify the discretisation or it is not an experiment.** A Q-table over the ~55-dim continuous observation is not merely impractical, it is undefined; "we tried tabular and it was bad" earns nothing. Commit to this state abstraction and state it in the report:
+**Tabular Q-learning — specify the discretisation or it is not an experiment.** A Q-table over the ~55-dim continuous observation is not merely impractical, it is undefined; "we tried tabular and it was bad" earns nothing. Commit to this state abstraction and state it in the write-up:
 
 - score diff ∈ {−2 or worse, −1, 0, +1, +2 or better} (5)
 - match phase ∈ {0–30, 30–60, 60–90 min} (3)
@@ -260,7 +260,7 @@ That is two interlocking cycles, and it is exactly how football people describe 
 - MAP opponent archetype (K = 6)
 - own current tactic, coarsened to {formation, press} only (5 × 3 = 15)
 
-⇒ 5·3·3·6·15 = **4,050 states**, against 810 raw actions — so also coarsen the action space for this baseline to {formation × press} = 15, giving ~61k Q-values. That is learnable within your match budget, and the resulting report paragraph writes itself: the abstraction discards tempo, fatigue detail and belief *uncertainty* (it keeps only the MAP, throwing away the entropy that drives the deep agent's hedging), so it plateaus below MaskablePPO — a concrete, quantified demonstration of why function approximation matters, which is precisely what the rubric is looking for.
+⇒ 5·3·3·6·15 = **4,050 states**, against 810 raw actions — so also coarsen the action space for this baseline to {formation × press} = 15, giving ~61k Q-values. That is learnable within your match budget, and the resulting report paragraph writes itself: the abstraction discards tempo, fatigue detail and belief *uncertainty* (it keeps only the MAP, throwing away the entropy that drives the deep agent's hedging), so it plateaus below MaskablePPO — a concrete, quantified demonstration of why function approximation matters, which is precisely what the criteria is looking for.
 
 ### 3.6 Stretch goals (only if Phase 3 opens on schedule)
 
@@ -270,7 +270,7 @@ That is two interlocking cycles, and it is exactly how football people describe 
 
 ---
 
-## 4. The GAFFER Console (Part D — GUI design)
+## 4. The GAFFER Console (deliverable — GUI design)
 
 Two-process design, chosen so real-time animation is not fighting Streamlit's rerun model:
 
@@ -281,10 +281,10 @@ Two-process design, chosen so real-time animation is not fighting Streamlit's re
 
 **Panels:**
 
-| Panel | Content | Why it earns marks |
+| Panel | Content | Why it adds value |
 |---|---|---|
-| **Broadcast pitch** | 22 dots + ball, formation-shape overlay, toggleable pitch-control heatmap, press-zone shading | "operational use of the algorithm" — the examiner sees the tactic, not just a number |
-| **Manager's bench** | The agent's chosen tactic per epoch, with the top-3 state features driving it and the value-function delta vs the next-best action | explainability; answers "why did it do that?" in the viva before it's asked |
+| **Broadcast pitch** | 22 dots + ball, formation-shape overlay, toggleable pitch-control heatmap, press-zone shading | "operational use of the algorithm" — the readers sees the tactic, not just a number |
+| **Manager's bench** | The agent's chosen tactic per epoch, with the top-3 state features driving it and the value-function delta vs the next-best action | explainability; answers "why did it do that?" in review before it's asked |
 | **Opponent read** | Live belief bars over the K archetypes + a confidence trace; flag the moment the read flips | this *is* Pillar 1, made visible |
 | **xG race & win probability** | cumulative xG for/against, live win-prob from the critic | the classic football-broadcast graphic; instantly legible |
 | **Squad bar** | stamina per player, sub windows remaining, cards | makes the substitution policy watchable |
@@ -297,7 +297,7 @@ Two-process design, chosen so real-time animation is not fighting Streamlit's re
 
 ## 5. Evaluation protocol
 
-Fix this **before** training, and pre-register it in Part B. Sloppy evaluation is the single most common way these projects lose Part E marks.
+Fix this **before** training and pre-register it. Sloppy evaluation is the single most common way a simulation study misleads itself.
 
 - **Opponent pool:** 6–8 scripted archetypes + 3 RL checkpoints + 1 random-tactic coach.
 - **Sample size:** ≥ 500 matches per (agent, opponent) cell; report win/draw/loss, points-per-match, goal difference, xG difference, all with 95% bootstrap CIs.
@@ -309,7 +309,7 @@ Fix this **before** training, and pre-register it in Part B. Sloppy evaluation i
   4. Adaptation latency: epochs until the belief filter's MAP archetype is correct.
   5. Exploitability proxy: train a fresh best-response coach against the frozen final agent for a **fixed, stated budget** — 200k macro-steps, identical PPO hyperparameters, 3 seeds — then report its points-per-match over 500 evaluation matches. Without a declared budget the number means nothing (any agent is exploitable given unbounded compute), so the budget belongs in the caption, not just the appendix. Lower is more robust; this is the honest version of the draft's self-play claim. Run the same probe against a *scripted* archetype as a reference point, so the reader has a scale to judge against.
 - **Ablations:** belief vs blind vs oracle vs recurrent; potential-based shaping on/off; action masking on/off; SMDP `γ^τ` vs flat `γ`.
-- **Negative results are fine and should be reported.** If shaping doesn't help, say so with the CI. Examiners reward this in oral defence.
+- **Negative results are fine and should be reported.** If shaping doesn't help, say so with the CI. readers reward this in oral defence.
 
 ---
 
@@ -317,15 +317,15 @@ Fix this **before** training, and pre-register it in Part B. Sloppy evaluation i
 
 ### 6.1 Ownership
 
-Three people, individually assessed, so ownership boundaries matter.
+Three people, independently owned, so ownership boundaries matter.
 
 - **A — Environment owner:** PITCHSIM physics/event layer, calibration, low-level controller, archetype scripts.
 - **B — Learning owner:** Gym wrapper, MDP, masking, PPO/DQN/tabular runs, belief filter, self-play league, EGTA.
 - **C — Interface & evidence owner:** FastAPI backend, console, replay format, evaluation harness, compute infrastructure, figures, report assembly.
 
-Everyone must be able to defend the *whole* system in the viva — hold a standing 30-minute cross-explain each week where each person teaches their part to the others.
+Everyone should understand the *whole* system in review — hold a standing 30-minute cross-explain each week where each person teaches their part to the others.
 
-**Break the serial dependency on day one.** As written, B and C are blocked on A's environment for the first third of the project — a third of the schedule in which two of three individually-assessed people have nothing to show. The fix is cheap and non-negotiable: **A's first deliverable is a stub PITCHSIM** — the real API signatures (`reset`, `step`, the observation vector, the replay JSON schema) returning randomised outcomes with plausible statistics. B builds the Gym wrapper, masking and baselines against the stub; C builds the replay renderer and evaluation harness against the stub. When the real engine lands it drops in behind an unchanged interface. Freeze the replay JSON schema at the same time and version it; it is the contract between all three people.
+**Break the serial dependency on day one.** As written, the learning and interface layers are blocked on the environment for the first third of the project. The fix is cheap and non-negotiable: **the first environment deliverable is a stub PITCHSIM** — the real API signatures (`reset`, `step`, the observation vector, the replay JSON schema) returning randomised outcomes with plausible statistics. The Gym wrapper, masking and baselines build against the stub, as do the replay renderer and evaluation harness. When the real engine lands it drops in behind an unchanged interface. Freeze the replay JSON schema at the same time and version it; it is the contract between all three layers.
 
 ### 6.2 The phases
 
@@ -335,7 +335,7 @@ Phases are gated by *evidence*, not by dates. The calendar anchors below are tar
 
 **Phase 0 — Foundations & de-risking** · target 14 Aug → 27 Aug · *owner: all three*
 
-Freeze the §3.2 spec. Repo skeleton, ownership written into the README, StatsBomb loader, xG model fitted on real shots, stub PITCHSIM with frozen interfaces, Part A abstract drafted from §3.
+Freeze the §3.2 spec. Repo skeleton, ownership written into the README, StatsBomb loader, xG model fitted on real shots, stub PITCHSIM with frozen interfaces, deliverable abstract drafted from §3.
 
 > **Gate 0:** xG model AUC > 0.75 on held-out shots · stub PITCHSIM importable and B/C both building against it.
 
@@ -360,7 +360,7 @@ Then, still in Phase 1: vectorise to 32 envs and profile; run the §3.2 calibrat
 >
 > **If (1) fails, switch to Option B immediately and without debate.** If (2)–(4) fail, they are tuning problems: fix them inside Phase 1 rather than advancing, because every one of them silently voids a downstream deliverable.
 
-**Part B falls due during this phase** — write it from the frozen spec and the stub-based baselines; it does not depend on the real engine being finished.
+**deliverable falls due during this phase** — write it from the frozen spec and the stub-based baselines; it does not depend on the real engine being finished.
 
 ---
 
@@ -378,7 +378,7 @@ Gymnasium SMDP wrapper, `γ^τ` discounting, flat-array action masking, the §3.
 
 EGTA proper: freeze the pool, round-robin, payoff matrix, Nash via `nashpy` and α-Rank; answer the three questions in §3.5 Stage 3. Exploitability probe at the declared budget. All remaining ablations (shaping on/off and the `w` sweep, masking on/off, `γ^τ` vs flat `γ`). Console duel mode and the what-if panel. Every figure final.
 
-> **Gate 3 — FEATURE FREEZE, 15 Oct, no exceptions.** Every number that will appear in the report exists on disk. Nothing new is built after this date.
+> **Gate 3 — FEATURE FREEZE, 15 Oct, no exceptions.** Every number that will appear in the write-up exists on disk. Nothing new is built after this date.
 
 Stretch goals (§3.6) are considered *only* if this phase opens on schedule — and abandoned the moment Gate 3 is at risk.
 
@@ -386,9 +386,9 @@ Stretch goals (§3.6) are considered *only* if this phase opens on schedule — 
 
 **Phase 4 — Consolidation** · target 16 Oct → 23 Oct · *owner: C leads, all three write*
 
-Report assembly, demo rehearsal ×3 on the actual presenting laptop, viva Q&A bank (SMDP discounting, potential-based shaping, non-transitivity, POMDP belief states — see §3 and §5).
+Report assembly, demo rehearsal ×3 on the actual presenting laptop, review Q&A bank (SMDP discounting, potential-based shaping, non-transitivity, POMDP belief states — see §3 and §5).
 
-> **Gate 4:** the full demo runs offline, from cached replays, on the presenting laptop, with the network cable pulled. **Part E due 23 Oct.**
+> **Gate 4:** the full demo runs offline, from cached replays, on the presenting laptop, with the network cable pulled. **milestone 23 Oct.**
 
 **Buffer discipline:** Phase 4 is for writing and rehearsal, not coding. If you are still training in Phase 4, the demo will fail on stage. This is the most reliably-predicted failure in student projects and the easiest to avoid.
 
@@ -402,7 +402,7 @@ Phases slip; that is expected and survivable if you know in advance what you wil
 4. DQN baseline — tabular Q plus the scripted baselines already demonstrate the algorithmic comparison.
 5. Self-play Stage 2 — Stage 1's archetype gauntlet plus EGTA over scripted archetypes still supports both pillars.
 
-**Never cut:** the calibration table, the blind/belief/oracle ablation, seed spread on every plot, or the offline demo rehearsal. Those four are where the marks actually live.
+**Never cut:** the calibration table, the blind/belief/oracle ablation, seed spread on every plot, or the offline demo rehearsal. Those four are where the credibility of the whole thing lives.
 
 ### 6.4 Compute — and why you probably do not want an A100
 
@@ -441,7 +441,7 @@ So: rent CPU breadth, keep a modest GPU in your pocket for the stretch goal, and
 | **Belief filter is trivially easy ⇒ belief ≈ oracle, ablation flattens** | Medium | Medium | Scripted opponents switch tactics mid-match by rule + hazard (§3.4); adaptation latency measured from the true switch epoch |
 | **Tactic space is transitive ⇒ Pillar 2 has no result** | Medium | High | Counters designed into the EV score; cycle verified on scripted archetypes at Gate 1, not discovered in Phase 3 |
 | Shaping term swamps or ignores the terminal reward | Medium | Medium | `w ≈ 0.3` from the scale argument in §3.3; report the `w ∈ {0, 0.15, 0.3, 0.6}` sweep either way |
-| Uneven contribution (individually assessed) | Medium | High | Hard ownership split §6.1, stub-first to break the serial dependency, per-person commit history, weekly cross-explain |
+| Uneven contribution (independently owned) | Medium | High | Hard ownership split §6.1, stub-first to break the serial dependency, per-person commit history, weekly cross-explain |
 | Compute spend on the wrong resource (GPU idle while CPU bottlenecks) | Medium | Low | CPU-only Modal functions; GPU reserved for the stretch goal alone (§6.4) |
 | Demo fails live | Medium | High | Pre-computed replays cached to disk; demo runs fully offline; rehearse 3× on the actual presentation laptop |
 | Accusation of "just a simulator, not RL" | Low | Medium | Lead every document with the MDP formalism, the SMDP discounting, the ablation table, and the algorithm comparison |
@@ -483,7 +483,7 @@ gaffer_rl/
 │   └── static/                      # index.html, pitch.js, charts.js
 ├── train.py
 └── notebooks/
-    └── AT3_demo.ipynb               # Colab-runnable end-to-end notebook (submission format)
+    └── AT3_demo.ipynb               # Colab-runnable end-to-end notebook (release format)
 ```
 
 ---
@@ -507,7 +507,7 @@ Minimum viable honest version: use a `5_vs_5` or academy scenario, control all 5
 
 ---
 
-## 10. References for the report bibliography
+## 10. References for the write-up bibliography
 
 | # | Reference | Use |
 |---|---|---|
@@ -537,9 +537,9 @@ Minimum viable honest version: use a `5_vs_5` or academy scenario, control all 5
 ## 11. Immediate next steps
 
 1. **Commit to GAFFER now, with Gate 1 as the safety net.** Phase 0 is option-agnostic, so this commitment costs nothing if you later fall back — which is exactly why it can be made immediately rather than deliberated.
-2. Take this document to the consultation and get the coordinator's sign-off on the custom-environment route — the brief explicitly permits it ("developing a custom OpenAI Gym environment... and use RL methods to solve it").
-3. Split ownership (§6.1) in writing, in the repo README, on day one — Part E marks are allocated by individual contribution.
+2. Take this document to the consultation and get the stakeholder sign-off on the custom-environment route — the brief explicitly permits it ("developing a custom OpenAI Gym environment... and use RL methods to solve it").
+3. Split ownership (§6.1) in writing, in the repo README, on day one, so each layer has a clear owner.
 4. **A: write the stub PITCHSIM before writing any physics.** Freeze the observation vector and the replay JSON schema, version them, and hand them to B and C. This is the highest-leverage hour in the whole project.
 5. Start the StatsBomb loader + xG model. Self-contained, useful under *both* options, and it de-risks the calibration story before a single line of physics exists.
-6. Write Part A from §3's elevator pitch.
+6. Write deliverable from §3's elevator pitch.
 7. Decide the JAX question (§6.4) now or never — it is a Phase-0 commitment, and the default answer is no.

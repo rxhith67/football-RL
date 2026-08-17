@@ -3,7 +3,7 @@
 Batched over matches from the first line, because that is the only way to reach
 the 300 matches/min target: the tick loop runs in Python, so the fixed
 per-iteration overhead has to be amortised across a batch rather than paid once
-per match (plan sections 3.2 and 7).
+per match (design note 3.2 and 7).
 
 Array layout throughout: `(B, 2, 11, ...)` for [match, side, player].
 Home (side 0) attacks +x with its goal at x=0; away (side 1) attacks -x.
@@ -61,8 +61,8 @@ _AXIS = np.array([-1.0, 0.0, 1.0])
 def matchup_edge(own: np.ndarray, opp: np.ndarray) -> np.ndarray:
     """Rock-paper-scissors advantage of `own` tactics over `opp` tactics.
 
-    **This is a designed term, not an emergent one, and the report must say so.**
-    Plan section 3.5 is explicit that the counters belong in the EV score rather
+    **This is a designed term, not an emergent one, and the write-up must say so.**
+    design note 3.5 is explicit that the counters belong in the EV score rather
     than being left to emerge, and the honest framing is: *we built an environment
     that admits non-transitivity, then asked whether the RL coach discovers and
     exploits it.* Never "we discovered football is non-transitive".

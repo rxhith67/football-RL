@@ -62,7 +62,7 @@ def test_churn_indicator_ignores_substitution():
 
 
 # --------------------------------------------------------------------------
-# Stamina convention — the bug the original draft shipped (plan section 1, row 6)
+# Stamina convention — the bug the original draft shipped (design note 1, row 6)
 # --------------------------------------------------------------------------
 
 
@@ -156,7 +156,7 @@ def test_patient_tempo_raises_possession():
 
 
 # --------------------------------------------------------------------------
-# Replay schema — owner C's contract
+# Replay schema — the interface layer's contract
 # --------------------------------------------------------------------------
 
 

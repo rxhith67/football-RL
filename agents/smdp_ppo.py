@@ -10,7 +10,7 @@ the environment's `tau_log`, which records one array per step; that avoids
 copying SB3's eighty-line `collect_rollouts` just to thread one extra tensor
 through it.
 
-Flat-gamma is the ablation (plan section 5), available via `smdp=False`.
+Flat-gamma is the ablation (design note 5), available via `smdp=False`.
 """
 
 from __future__ import annotations

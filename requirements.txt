@@ -24,7 +24,7 @@ uvicorn>=0.30
 
 # --- Data & infrastructure ---
 requests>=2.32
-huggingface-hub>=0.34         # tagged-checkpoint backup (see plan section 6.4)
+huggingface-hub>=0.34         # tagged-checkpoint backup (see design note 6.4)
 
 # --- Optional accelerators (only if the Phase-1 profile falls short) ---
 # numba>=0.60

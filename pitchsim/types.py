@@ -1,8 +1,7 @@
 """Frozen data contract between the environment, the learner and the console.
 
-This module is the single most load-bearing file in the repository. Owner A
-implements PITCHSIM behind these types; owner B builds the Gymnasium wrapper
-against them; owner C builds the console and evaluation harness against them.
+This module is the single most load-bearing file in the repository. The engine implements PITCHSIM behind these types; the Gymnasium wrapper, the
+console and the evaluation harness all build against them.
 Because a stub implementation ships in Phase 0 (see `pitchsim.stub`), B and C are
 never blocked on the real engine.
 
@@ -21,7 +20,7 @@ from typing import Any
 
 import numpy as np
 
-#: 2 — added `mean_pass_length` to `WindowStats` (plan section 3.3 lists a
+#: 2 — added `mean_pass_length` to `WindowStats` (design note 3.3 lists a
 #: "pass-length profile" among the observables; it was missing, and without it
 #: a low-block counter side was statistically indistinguishable from a balanced
 #: mid-block one, capping archetype separability at 0.65).
@@ -44,7 +43,7 @@ HEAD_SIZES = (
     len(TEMPOS),
     len(SUBSTITUTIONS),
 )
-MASK_LENGTH = sum(HEAD_SIZES)  # 20 — a FLAT boolean array, per plan section 3.3
+MASK_LENGTH = sum(HEAD_SIZES)  # 20 — a FLAT boolean array, per design note 3.3
 N_ARCHETYPES = 6
 
 
@@ -124,7 +123,7 @@ class Tactic:
         """14-dim one-hot over the four *style* heads (substitution excluded).
 
         Substitution is a transient action rather than a persistent style, so it
-        is not part of the observed tactic state (plan section 3.3).
+        is not part of the observed tactic state (design note 3.3).
         """
         out = np.zeros(sum(HEAD_SIZES[:4]), dtype=np.float32)
         offset = 0
@@ -137,7 +136,7 @@ class Tactic:
         return Tactic(self.formation, self.block_height, self.press, self.tempo, 0)
 
     def style_differs_from(self, other: "Tactic") -> bool:
-        """Churn indicator c_k for the reward (plan section 3.3)."""
+        """Churn indicator c_k for the reward (design note 3.3)."""
         return self.without_substitution() != other.without_substitution()
 
 
@@ -150,7 +149,7 @@ class Tactic:
 class WindowStats:
     """Rolling observable statistics for one side over one window.
 
-    These eight fields are the belief filter's entire input (plan section 3.4)
+    These eight fields are the belief filter's entire input (design note 3.4)
     and half of the observation vector. The opponent's *tactic* is never exposed;
     only this statistical footprint is.
     """
@@ -194,7 +193,7 @@ class SquadState:
     """Per-side squad condition. Stamina is 1 = FRESH, 0 = EXHAUSTED.
 
     Note the convention deliberately inverts GRF's `tired_factor`, whose sign the
-    original draft got backwards (plan section 1, row 6).
+    original draft got backwards (design note 1, row 6).
     """
 
     stamina: np.ndarray = field(default_factory=lambda: np.ones(11, dtype=np.float32))

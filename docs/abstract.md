@@ -1,9 +1,9 @@
-# Part A — Project Abstract (draft)
+# Project Abstract (draft)
 
 **GAFFER-RL: Belief-Conditioned Macro-Tactical Coaching as a Partially-Observable
 Semi-Markov Decision Process**
 
-Status: **draft, Phase 0.** Numbers marked ⟨TBC⟩ are placeholders and must not be
+Status: **draft.**
 submitted until the corresponding gate has produced them.
 
 ---
@@ -85,4 +85,3 @@ game-theoretically rather than by win rate alone.
   softened to "to our knowledge" phrasing throughout — which it is.
 - Do **not** cite any figure produced by `StubPitchSim`.
 - Confirm the coordinator has signed off on the custom-environment route; the
-  brief permits it explicitly, but get it in writing.

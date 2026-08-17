@@ -3,15 +3,15 @@
 WHAT THIS IS: a cheap generative model that emits statistically plausible match
 data through the exact `PitchSim` API. It exists so that owners B and C can build
 the Gymnasium wrapper, the belief filter, the console and the evaluation harness
-during Phase 0, instead of idling until the real engine lands. Plan section 6.1.
+during Phase 0, instead of idling until the real engine lands. design note 6.1.
 
 WHAT THIS IS NOT: football. There are no players, no ball and no physics — the
 `ticks` it records are decorative circles. Nothing produced by this module may
-appear in the report as a result. `StubPitchSim.IS_STUB` is True precisely so
+appear in the write-up as a result. `StubPitchSim.IS_STUB` is True precisely so
 that downstream code and figures can assert against it.
 
 It is nonetheless deliberately *directionally* correct: possession responds to
-tempo, stamina drains with press, and the archetype counter-cycle of plan section
+tempo, stamina drains with press, and the archetype counter-cycle of design note
 3.5 is baked into the goal-rate model. That is enough for B to confirm the RL
 plumbing learns *something* and for C to confirm the EGTA harness finds a cycle,
 so that when the real engine arrives the only open question is whether the
@@ -82,7 +82,7 @@ class StubPitchSim(PitchSim):
 
     @staticmethod
     def _counter_edge(own: np.ndarray, opp: np.ndarray) -> float:
-        """Rock-paper-scissors advantage, matching plan section 3.5's cycle.
+        """Rock-paper-scissors advantage, matching design note 3.5's cycle.
 
         Positive means `own` has the tactical upper hand this window:
           * pressing high beats a patient, short-passing side

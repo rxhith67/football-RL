@@ -2,9 +2,9 @@
 
 Implemented as a **VecEnv** rather than a single-match `gym.Env`, because
 PITCHSIM is batched: driving it one match at a time would discard the entire
-point of the vectorisation and miss the throughput target (plan section 3.2).
+point of the vectorisation and miss the throughput target (design note 3.2).
 
-Semi-Markov structure (plan section 3.3)
+Semi-Markov structure (design note 3.3)
 ---------------------------------------
 The coach acts at scheduled five-minute marks *and* on triggers (goal, half-time,
 red card), so the dwell time tau_k between decisions varies. That makes this a
@@ -17,7 +17,7 @@ Reward
 
 with Phi(s) = w * (xG_for - xG_against), a potential-based shaping function whose
 policy invariance follows from Ng, Harada & Russell (1999). `w` is set by the
-scale argument in plan section 3.3: shaping telescopes to w * final xG difference,
+scale argument in design note 3.3: shaping telescopes to w * final xG difference,
 so w ~= 0.3 keeps typical shaping below the terminal +-1.
 
 Partial observability
@@ -289,7 +289,7 @@ class VecCoachEnv(VecEnv):
         return np.nan_to_num(obs, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
 
     def action_masks(self) -> np.ndarray:
-        """FLAT boolean array of length 20 per env (plan section 3.3).
+        """FLAT boolean array of length 20 per env (design note 3.3).
 
         `sb3_contrib`'s MaskableMultiCategoricalDistribution expects one flat
         array of length sum(nvec), which it splits internally — the original draft

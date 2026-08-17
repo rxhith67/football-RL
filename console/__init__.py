@@ -1,4 +1,4 @@
-"""Coach's console. Owner C, Phase 2.
+"""Coach's console (interface layer).
 
 Planned:
   server.py     FastAPI: POST /simulate, /step (duel mode), /whatif

@@ -3,12 +3,12 @@
 Two things here are load-bearing for the whole project:
 
 1. **Archetypes must be statistically distinguishable** from their observable
-   footprint alone, or Pillar 1 has nothing to infer (Gate 1, plan section 3.2).
+   footprint alone, or Pillar 1 has nothing to infer (Gate 1, design note 3.2).
 2. **They must change plan mid-match.** A coach who picks a shape at kickoff and
    holds it for ninety minutes lets the belief filter saturate by minute ten,
    collapsing `belief ~= oracle` and flattening the headline ablation. Switching
    is what keeps the filtering problem alive and makes adaptation latency — time
-   to *re*-identify after a true switch — a meaningful metric (plan section 3.4).
+   to *re*-identify after a true switch — a meaningful metric (design note 3.4).
 
 Batched over matches to match `pitchsim.engine.BatchedEngine`.
 """

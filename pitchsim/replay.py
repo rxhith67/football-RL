@@ -1,7 +1,7 @@
 """Versioned replay JSON — the contract between the sim and the console.
 
-Frozen in Phase 0 so owner C can build the broadcast pitch, belief bars and xG
-race against the stub while owner A is still writing physics. The console reads
+Frozen early so the broadcast pitch, belief bars and xG race can be built
+against the stub while the physics is still being written. The console reads
 only this format; it never imports the engine.
 
 Layout (schema version 1)::

@@ -1,4 +1,4 @@
-"""Evaluation harness, EGTA and figures. Owner C, Phases 1-3.
+"""Evaluation harness, EGTA and figures (analysis layer).
 
 Planned modules:
   separability.py  K-way archetype confusion matrix — a GATE 1 condition, and it

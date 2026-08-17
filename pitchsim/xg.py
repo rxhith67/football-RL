@@ -1,9 +1,9 @@
 """Expected-goals model, fitted on real StatsBomb shots.
 
-This is the Gate 0 deliverable (plan section 6.2): held-out AUC > 0.75. It matters
+This is the Gate 0 deliverable (design note 6.2): held-out AUC > 0.75. It matters
 beyond the number, because xG appears in three separate places downstream —
 as the sim's goal-sampling mechanism, as the potential function in the shaped
-reward (plan section 3.3), and as the xG-race panel in the console. The original
+reward (design note 3.3), and as the xG-race panel in the console. The original
 draft used a placeholder xG; this one is fitted and falsifiable.
 
 Fitted coefficients serialise to JSON rather than pickle so the model is

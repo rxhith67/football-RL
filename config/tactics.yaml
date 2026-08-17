@@ -1,10 +1,10 @@
 # GAFFER-RL — tactic space and opponent archetypes.
-# FROZEN in Phase 0 (plan section 3.3). Changing the head cardinalities invalidates
+# FROZEN in Phase 0 (design note 3.3). Changing the head cardinalities invalidates
 # every trained checkpoint and the action mask; treat this file as a contract.
 
 # ---------------------------------------------------------------------------
 # Action space: MultiDiscrete([5, 3, 3, 3, 6]) = 810 combinations.
-# Mask is a FLAT boolean array of length 5+3+3+3+6 = 20 (plan section 3.3).
+# Mask is a FLAT boolean array of length 5+3+3+3+6 = 20 (design note 3.3).
 # ---------------------------------------------------------------------------
 action_space:
   heads:
@@ -62,7 +62,7 @@ formations:
 # ---------------------------------------------------------------------------
 # Head modifiers — how each discrete choice perturbs the engine.
 # These are the PRIMARY CALIBRATION KNOBS. They are tuned jointly against both
-# the realism bands AND archetype separability (plan section 3.2): a sim that is
+# the realism bands AND archetype separability (design note 3.2): a sim that is
 # realistic but whose tactics all look alike voids Pillar 1.
 # ---------------------------------------------------------------------------
 modifiers:
@@ -103,7 +103,7 @@ modifiers:
     direct:     {softmax_temp: 1.50, risk_weight: 0.40, directness:  0.90}
 
 # ---------------------------------------------------------------------------
-# Substitution rules (drive the action mask — plan section 3.3)
+# Substitution rules (drive the action mask — design note 3.3)
 # ---------------------------------------------------------------------------
 substitutions:
   max_subs: 5
@@ -113,18 +113,18 @@ substitutions:
   tactic_change_lockout: 1     # epochs a head is locked after being changed
 
 # ---------------------------------------------------------------------------
-# Opponent archetypes (K = 6) — plan section 3.4.
+# Opponent archetypes (K = 6) — design note 3.4.
 #
 # Designed so the payoff matrix admits the two interlocking counter-cycles of
-# plan section 3.5:
+# design note 3.5:
 #     high_press  ->  possession   (press forces turnovers against short build-up)
 #     possession  ->  low_block    (sustained territory eventually finds the gap)
 #     direct      ->  high_press   (long balls bypass the press; high line exposed)
 #     low_block   ->  direct       (bodies behind the ball absorb route one)
 #
 # Non-transitivity is VERIFIED at Gate 1 on these scripted archetypes, before any
-# RL is involved (plan section 3.5). If no cycle appears, retune `modifiers`
-# above and document the tuning honestly in the report.
+# RL is involved (design note 3.5). If no cycle appears, retune `modifiers`
+# above and document the tuning honestly in the write-up.
 # ---------------------------------------------------------------------------
 # Redesigned 15 Aug 2026 for separability. The original set had four archetypes
 # sharing press=balanced, and three pairs that differed in only ONE of the three
@@ -167,7 +167,7 @@ archetypes:
     base:  {formation: 4-4-2, block_height: mid, press: balanced, tempo: balanced}
 
 # ---------------------------------------------------------------------------
-# Mid-match switching — MANDATORY, not decoration (plan section 3.4).
+# Mid-match switching — MANDATORY, not decoration (design note 3.4).
 #
 # A scripted opponent that holds one plan for 90 minutes lets the belief filter
 # saturate by minute 10, collapsing belief ~= oracle and flattening the headline
@@ -188,7 +188,7 @@ switching:
       shift: {block_height: low, press: contain}
 
 # ---------------------------------------------------------------------------
-# Separability acceptance criteria — a Gate 1 condition (plan section 3.2).
+# Separability acceptance criteria — a Gate 1 condition (design note 3.2).
 # ---------------------------------------------------------------------------
 separability:
   window_minutes: 15.0
