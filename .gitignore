@@ -1,0 +1,31 @@
+# Secrets — never commit
+.env
+*.token
+
+# StatsBomb cache (large; regenerate with `python -m pitchsim.statsbomb --fetch`)
+data/statsbomb/raw/
+data/statsbomb/*.parquet
+
+# Artefacts
+runs/
+checkpoints/
+replays/
+figures/
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Run logs — regenerate by re-running the sweeps
+*.log

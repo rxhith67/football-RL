@@ -1,0 +1,196 @@
+# GAFFER-RL — tactic space and opponent archetypes.
+# FROZEN in Phase 0 (plan section 3.3). Changing the head cardinalities invalidates
+# every trained checkpoint and the action mask; treat this file as a contract.
+
+# ---------------------------------------------------------------------------
+# Action space: MultiDiscrete([5, 3, 3, 3, 6]) = 810 combinations.
+# Mask is a FLAT boolean array of length 5+3+3+3+6 = 20 (plan section 3.3).
+# ---------------------------------------------------------------------------
+action_space:
+  heads:
+    formation:    [4-3-3, 4-2-3-1, 3-5-2, 5-4-1, 4-4-2]
+    block_height: [low, mid, high]
+    press:        [contain, balanced, gegenpress]
+    tempo:        [patient, balanced, direct]
+    substitution: [none, bench_1, bench_2, bench_3, bench_4, bench_5]
+  mask_length: 20
+
+# ---------------------------------------------------------------------------
+# Formation slot matrices — resting positions in normalised attacking-third
+# coordinates: x in [0,1] from own goal-line to opponent goal-line,
+# y in [0,1] from left touchline to right touchline. Index 0 is the keeper.
+# The engine translates these by ball position, block height and team width.
+# ---------------------------------------------------------------------------
+formations:
+  4-3-3:
+    slots: [[0.05, 0.50],
+            [0.25, 0.15], [0.22, 0.38], [0.22, 0.62], [0.25, 0.85],
+            [0.45, 0.30], [0.42, 0.50], [0.45, 0.70],
+            [0.72, 0.15], [0.75, 0.50], [0.72, 0.85]]
+    centre_backs: [2, 3]
+    width: 0.90
+  4-2-3-1:
+    slots: [[0.05, 0.50],
+            [0.25, 0.15], [0.22, 0.38], [0.22, 0.62], [0.25, 0.85],
+            [0.40, 0.40], [0.40, 0.60],
+            [0.60, 0.18], [0.62, 0.50], [0.60, 0.82],
+            [0.78, 0.50]]
+    centre_backs: [2, 3]
+    width: 0.85
+  3-5-2:
+    slots: [[0.05, 0.50],
+            [0.22, 0.30], [0.20, 0.50], [0.22, 0.70],
+            [0.45, 0.10], [0.42, 0.35], [0.40, 0.50], [0.42, 0.65], [0.45, 0.90],
+            [0.72, 0.42], [0.72, 0.58]]
+    centre_backs: [1, 2, 3]
+    width: 0.95
+  5-4-1:
+    slots: [[0.05, 0.50],
+            [0.18, 0.12], [0.15, 0.32], [0.14, 0.50], [0.15, 0.68], [0.18, 0.88],
+            [0.35, 0.22], [0.33, 0.42], [0.33, 0.58], [0.35, 0.78],
+            [0.60, 0.50]]
+    centre_backs: [2, 3, 4]
+    width: 0.75
+  4-4-2:
+    slots: [[0.05, 0.50],
+            [0.25, 0.15], [0.22, 0.38], [0.22, 0.62], [0.25, 0.85],
+            [0.45, 0.15], [0.42, 0.40], [0.42, 0.60], [0.45, 0.85],
+            [0.70, 0.42], [0.70, 0.58]]
+    centre_backs: [2, 3]
+    width: 0.85
+
+# ---------------------------------------------------------------------------
+# Head modifiers — how each discrete choice perturbs the engine.
+# These are the PRIMARY CALIBRATION KNOBS. They are tuned jointly against both
+# the realism bands AND archetype separability (plan section 3.2): a sim that is
+# realistic but whose tactics all look alike voids Pillar 1.
+# ---------------------------------------------------------------------------
+modifiers:
+  # Widened 15 Aug 2026. At the original spacing the six archetypes were only 50%
+  # separable (worst-case recall 0.30) because neighbouring levels produced nearly
+  # identical PPDA, field tilt and possession. The belief filter cannot infer what
+  # the environment does not express, so the levels must be genuinely far apart.
+  # Re-narrowed 16 Aug 2026. The 20/38/58 spread bought separability but broke the
+  # sim outside the balanced matchup: a line resting 58 m upfield puts the whole
+  # team in the opponent's half, so a high-block possession side camped in the
+  # final third and beat a low block by ~50 goals a match. Separability is
+  # re-verified after this change rather than assumed.
+  block_height:              # defensive-line rest position, in metres upfield
+    # Narrowed again 16 Aug 2026. The raw physical strength of a high line was
+    # swamping everything: archetypes differed by 12-31 goals a match on physics
+    # alone, so a designed matchup term worth +-0.4 could never produce a cycle.
+    # Compressing the block-height effect makes the archetypes roughly equal in
+    # raw strength and lets the tactical counters decide, which is the only way
+    # a rock-paper-scissors structure can survive.
+    low:        {line_x: 31.0, compactness: 0.84, offside_trap: 0.10}
+    mid:        {line_x: 38.0, compactness: 0.72, offside_trap: 0.35}
+    high:       {line_x: 45.0, compactness: 0.62, offside_trap: 0.75}
+  press:                     # press trigger radius (m), closing speed multiplier,
+                             # stamina drain multiplier, foul rate multiplier
+    # Widened 17 Aug 2026. Block height had to be compressed to let a
+    # rock-paper-scissors cycle survive, which cost separability. Press and tempo
+    # are the right place to buy it back: they change how a side PLAYS (PPDA,
+    # pass length, possession share) far more than how STRONG it is, so widening
+    # them sharpens the belief filter's signal without reintroducing the raw
+    # dominance that flattened the payoff matrix.
+    contain:    {trigger_radius:  4.0, closing_speed: 0.60, stamina_drain: 0.50, foul_rate: 0.55}
+    balanced:   {trigger_radius: 14.0, closing_speed: 1.00, stamina_drain: 1.00, foul_rate: 1.00}
+    gegenpress: {trigger_radius: 32.0, closing_speed: 1.55, stamina_drain: 2.00, foul_rate: 2.00}
+  tempo:                     # softmax temperature and risk weight in the EV score,
+                             # plus a bias toward long/direct options
+    patient:    {softmax_temp: 0.25, risk_weight: 2.00, directness: -0.85}
+    balanced:   {softmax_temp: 0.70, risk_weight: 1.00, directness:  0.00}
+    direct:     {softmax_temp: 1.50, risk_weight: 0.40, directness:  0.90}
+
+# ---------------------------------------------------------------------------
+# Substitution rules (drive the action mask — plan section 3.3)
+# ---------------------------------------------------------------------------
+substitutions:
+  max_subs: 5
+  max_windows: 3
+  earliest_minute: 15.0        # soft realism constraint
+  stamina_restored: 0.95       # bench player enters near-fresh
+  tactic_change_lockout: 1     # epochs a head is locked after being changed
+
+# ---------------------------------------------------------------------------
+# Opponent archetypes (K = 6) — plan section 3.4.
+#
+# Designed so the payoff matrix admits the two interlocking counter-cycles of
+# plan section 3.5:
+#     high_press  ->  possession   (press forces turnovers against short build-up)
+#     possession  ->  low_block    (sustained territory eventually finds the gap)
+#     direct      ->  high_press   (long balls bypass the press; high line exposed)
+#     low_block   ->  direct       (bodies behind the ball absorb route one)
+#
+# Non-transitivity is VERIFIED at Gate 1 on these scripted archetypes, before any
+# RL is involved (plan section 3.5). If no cycle appears, retune `modifiers`
+# above and document the tuning honestly in the report.
+# ---------------------------------------------------------------------------
+# Redesigned 15 Aug 2026 for separability. The original set had four archetypes
+# sharing press=balanced, and three pairs that differed in only ONE of the three
+# heads that drive the observables — Counter vs Balanced, Direct vs Balanced,
+# Possession vs Balanced. Those pairs are physically near-identical, so no filter
+# could separate them and overall accuracy sat at 50%.
+#
+# The (block, press, tempo) index triples below are drawn from the ternary parity
+# code a + b + c = 0 (mod 3), which guarantees every pair differs in at least TWO
+# heads. Each remains a recognisable real-world style, so the fix buys
+# separability without inventing football nobody plays.
+archetypes:
+  high_press_433:                                              # (2, 2, 2)
+    label: "High-press 4-3-3"
+    base:  {formation: 4-3-3, block_height: high, press: gegenpress, tempo: direct}
+  # Replaced 16 Aug 2026. The old "Low-block 5-4-1" was (low, contain, patient) —
+  # a side that sits deep AND passes sideways. That is not a real archetype: it
+  # concedes territory without ever threatening, lost to everything, and let
+  # Possession beat it by +24 goals a match. That single degenerate matchup was
+  # the largest obstruction to finding a non-transitive cycle.
+  #
+  # The deep-defending role is now carried by Counter 5-4-1 (low, balanced,
+  # direct) — a real low block that breaks fast — and the freed slot goes to a
+  # control-and-counterpress side, which is a genuine modern style and keeps the
+  # parity code intact (every pair still differs in at least two heads).
+  counter_541:                                                 # (0, 1, 2)
+    label: "Counter 5-4-1"
+    base:  {formation: 5-4-1, block_height: low, press: balanced, tempo: direct}
+  counterpress_442:                                            # (1, 2, 0)
+    label: "Counterpress 4-4-2"
+    base:  {formation: 4-4-2, block_height: mid, press: gegenpress, tempo: patient}
+  possession_4231:                                             # (2, 1, 0)
+    label: "Possession 4-2-3-1"
+    base:  {formation: 4-2-3-1, block_height: high, press: balanced, tempo: patient}
+  direct_352:                                                  # (1, 0, 2)
+    label: "Direct 3-5-2"
+    base:  {formation: 3-5-2, block_height: mid, press: contain, tempo: direct}
+  balanced_442:                                                # (1, 1, 1)
+    label: "Balanced 4-4-2"
+    base:  {formation: 4-4-2, block_height: mid, press: balanced, tempo: balanced}
+
+# ---------------------------------------------------------------------------
+# Mid-match switching — MANDATORY, not decoration (plan section 3.4).
+#
+# A scripted opponent that holds one plan for 90 minutes lets the belief filter
+# saturate by minute 10, collapsing belief ~= oracle and flattening the headline
+# ablation. State-dependent rules plus a random hazard keep the filtering problem
+# genuinely non-trivial and make adaptation latency measurable from the true
+# switch epoch.
+# ---------------------------------------------------------------------------
+switching:
+  hazard_per_epoch: 0.06       # random drift, independent of match state
+  rules:
+    - when: {trailing_by_at_least: 1, after_minute: 45}
+      shift: {block_height: high, press: gegenpress, tempo: direct}
+    - when: {leading_by_at_least: 1, after_minute: 70}
+      shift: {block_height: low, press: contain, tempo: patient}
+    - when: {trailing_by_at_least: 2, after_minute: 60}
+      shift: {formation: 3-5-2, block_height: high, press: gegenpress, tempo: direct}
+    - when: {red_card_against_self: true}
+      shift: {block_height: low, press: contain}
+
+# ---------------------------------------------------------------------------
+# Separability acceptance criteria — a Gate 1 condition (plan section 3.2).
+# ---------------------------------------------------------------------------
+separability:
+  window_minutes: 15.0
+  min_overall_accuracy: 0.70
+  min_per_archetype_recall: 0.50

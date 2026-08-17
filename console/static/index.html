@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAFFER Console</title>
+<style>
+  :root { --bg:#0f1c14; --panel:#16281d; --line:#2b4636; --text:#e8f0ea;
+          --muted:#8fa899; --home:#e63946; --away:#3d8bfd; --accent:#4ade80; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  header { padding:14px 20px; border-bottom:1px solid var(--line);
+           display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  h1 { font-size:17px; margin:0; letter-spacing:.3px; }
+  .sub { color:var(--muted); font-size:12px; }
+  .wrap { display:grid; grid-template-columns:minmax(0,2fr) minmax(260px,1fr);
+          gap:16px; padding:16px 20px; align-items:start; }
+  .panel { background:var(--panel); border:1px solid var(--line);
+           border-radius:10px; padding:14px; }
+  .panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.08em;
+              color:var(--muted); margin:0 0 10px; font-weight:600; }
+  canvas { width:100%; height:auto; display:block; border-radius:8px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  select,button { background:#1e3527; color:var(--text); border:1px solid var(--line);
+                  border-radius:6px; padding:6px 10px; font:inherit; }
+  button { cursor:pointer; }
+  button.primary { background:var(--accent); color:#0b1c12; border-color:var(--accent);
+                   font-weight:600; }
+  button:disabled { opacity:.5; cursor:default; }
+  .score { font-size:30px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .clock { color:var(--muted); font-variant-numeric:tabular-nums; }
+  input[type=range] { width:100%; }
+  .bar { height:9px; background:#0d1a12; border-radius:5px; overflow:hidden; margin:3px 0 9px; }
+  .bar > i { display:block; height:100%; background:var(--accent); }
+  .lbl { display:flex; justify-content:space-between; font-size:12px; color:var(--muted); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td { padding:3px 0; }
+  td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+  .note { color:var(--muted); font-size:12px; margin-top:8px; }
+  .key { display:inline-block; width:11px; height:11px; border-radius:50%;
+         margin-right:5px; vertical-align:middle; border:1.5px solid #fff; }
+  .bench { max-height:270px; overflow:auto; }
+  .bench table td { padding:4px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+  .bench td:nth-child(2) { text-align:left; color:var(--text); }
+  .now { background:rgba(74,222,128,.14); }
+  .warn { background:#3a2a12; border:1px solid #6b4a1c; color:#f5d9a8;
+          padding:8px 10px; border-radius:7px; font-size:12px; margin-top:10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>GAFFER Console</h1>
+  <span class="sub">belief-conditioned macro-tactical coaching &middot; PITCHSIM</span>
+</header>
+
+<div class="wrap">
+  <div>
+    <div class="panel">
+      <h2>Broadcast pitch</h2>
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <div class="score" id="score">0 &ndash; 0</div>
+        <div class="clock" id="clock">00:00</div>
+      </div>
+      <div class="row" style="gap:16px;margin-bottom:8px">
+        <span><i class="key" style="background:#e63946"></i>
+              <b>GAFFER (you)</b> <span class="sub">&rarr; attacking right</span></span>
+        <span><i class="key" style="background:#3d8bfd"></i>
+              Opponent <span class="sub">&larr; attacking left</span></span>
+      </div>
+      <canvas id="pitch" width="1050" height="680"></canvas>
+      <div style="margin-top:10px">
+        <input type="range" id="scrub" min="0" max="0" value="0">
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="play" class="primary">Play</button>
+        <button id="sim">New match</button>
+        <button id="simPolicy">Run trained coach</button>
+        <label class="sub">Home</label>
+        <select id="homeFormation"></select>
+        <select id="homePress"></select>
+        <label class="sub">Away</label>
+        <select id="awayFormation"></select>
+        <select id="awayPress"></select>
+      </div>
+      <p class="note">Scrubbing a pre-computed replay, not a live stream — you can
+        jump straight to the moment that matters.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <h2>Opponent read &mdash; belief</h2>
+      <div id="belief"></div>
+      <p class="note" id="beliefNote">Belief bars appear once a policy drives the match.</p>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <h2>xG race</h2>
+      <canvas id="xg" width="520" height="220"></canvas>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <h2>Manager&rsquo;s bench &mdash; decisions</h2>
+      <div class="bench"><table id="bench"><tbody></tbody></table></div>
+      <div class="warn" id="controller"></div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <h2>Match facts</h2>
+      <table id="facts"><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+const PITCH_L = 105, PITCH_W = 68;
+let replay = null, frame = 0, timer = null;
+
+const $ = (id) => document.getElementById(id);
+const ctx = $("pitch").getContext("2d");
+const xgCtx = $("xg").getContext("2d");
+
+function drawPitch() {
+  const c = ctx, W = 1050, H = 680, s = W / PITCH_L;
+  c.fillStyle = "#2f7a3f"; c.fillRect(0, 0, W, H);
+  c.strokeStyle = "rgba(232,240,232,.75)"; c.lineWidth = 2;
+  c.strokeRect(4, 4, W - 8, H - 8);
+  c.beginPath(); c.moveTo(W / 2, 4); c.lineTo(W / 2, H - 4); c.stroke();
+  c.beginPath(); c.arc(W / 2, H / 2, 9.15 * s, 0, Math.PI * 2); c.stroke();
+  [[4, 1], [W - 4, -1]].forEach(([x0, dir]) => {
+    c.strokeRect(x0, (PITCH_W / 2 - 20.15) * s, dir * 16.5 * s, 40.3 * s);
+    c.strokeRect(x0, (PITCH_W / 2 - 9.15) * s, dir * 5.5 * s, 18.3 * s);
+  });
+}
+
+function drawFrame(i) {
+  if (!replay || !replay.ticks.length) return;
+  const t = replay.ticks[Math.min(i, replay.ticks.length - 1)];
+  const s = 1050 / PITCH_L;
+  drawPitch();
+  const dot = (p, colour) => {
+    ctx.beginPath();
+    ctx.arc(p[0] * s, p[1] * (680 / PITCH_W), 9, 0, Math.PI * 2);
+    ctx.fillStyle = colour; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
+  };
+  t.home.forEach(p => dot(p, "#e63946"));
+  t.away.forEach(p => dot(p, "#3d8bfd"));
+  ctx.beginPath();
+  ctx.arc(t.ball[0] * s, t.ball[1] * (680 / PITCH_W), 6, 0, Math.PI * 2);
+  ctx.fillStyle = "#fff"; ctx.fill(); ctx.strokeStyle = "#111"; ctx.stroke();
+
+  const minute = t.t / 60;
+  const goals = (replay.events || []).filter(e => e.type === "goal" && e.minute <= minute);
+  $("score").innerHTML = `${goals.filter(g => g.side === 0).length} &ndash; ${goals.filter(g => g.side === 1).length}`;
+  $("clock").textContent = `${String(Math.floor(minute)).padStart(2, "0")}:${String(Math.floor(t.t % 60)).padStart(2, "0")}`;
+  drawXG(minute);
+  renderBench(minute);
+}
+
+function drawXG(upto) {
+  const c = xgCtx, W = 520, H = 220;
+  c.clearRect(0, 0, W, H);
+  c.fillStyle = "#0d1a12"; c.fillRect(0, 0, W, H);
+  const tr = replay && replay.traces ? replay.traces : null;
+  if (!tr || !tr.xg_home.length) return;
+  const maxXG = Math.max(1, ...tr.xg_home.map(p => p[1]), ...tr.xg_away.map(p => p[1]));
+  const line = (pts, colour) => {
+    c.beginPath(); c.strokeStyle = colour; c.lineWidth = 2.5;
+    pts.filter(p => p[0] <= upto + 1e-9).forEach((p, i) => {
+      const x = (p[0] / 90) * W, y = H - (p[1] / maxXG) * (H - 16) - 8;
+      i ? c.lineTo(x, y) : c.moveTo(x, y);
+    });
+    c.stroke();
+  };
+  line(tr.xg_home, "#e63946");
+  line(tr.xg_away, "#3d8bfd");
+}
+
+function renderBelief(b, labels) {
+  if (!b) { return; }
+  $("beliefNote").style.display = "none";
+  $("belief").innerHTML = b.map((v, i) =>
+    `<div class="lbl"><span>${labels[i] || "archetype " + i}</span><span>${(v * 100).toFixed(0)}%</span></div>
+     <div class="bar"><i style="width:${(v * 100).toFixed(1)}%"></i></div>`).join("");
+}
+
+function renderBench(upto) {
+  if (!replay || !replay.epochs) return;
+  const mine = replay.epochs.filter(e => e.side === 0);
+  let current = -1;
+  mine.forEach((e, i) => { if (e.minute <= upto + 1e-9) current = i; });
+  if (current >= 0 && mine[current].belief) {
+    renderBelief(mine[current].belief, (replay.meta.archetypes) || []);
+  }
+  $("bench").querySelector("tbody").innerHTML = mine.map((e, i) => {
+    const t = e.tactic;
+    return `<tr class="${i === current ? "now" : ""}">
+      <td>${Math.round(e.minute)}'</td>
+      <td>${t.formation} &middot; ${t.block_height} block &middot; ${t.press} &middot; ${t.tempo}</td>
+      <td class="sub">${e.trigger === "scheduled" ? "" : e.trigger}</td></tr>`;
+  }).join("");
+}
+
+function renderFacts() {
+  const r = replay && replay.result ? replay.result : null;
+  if (!r) return;
+  const rows = [
+    ["Score", `${r.score[0]} – ${r.score[1]}`],
+    ["Shots", `${r.shots[0]} – ${r.shots[1]}`],
+    ["xG", `${r.xg[0].toFixed(2)} – ${r.xg[1].toFixed(2)}`],
+    ["Possession (home)", `${(r.possession_home * 100).toFixed(0)}%`],
+    ["Coach decisions", r.n_decisions],
+    ["Seed", r.seed],
+  ];
+  $("facts").querySelector("tbody").innerHTML =
+    rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("");
+}
+
+async function simulate() {
+  $("sim").disabled = true; $("sim").textContent = "Simulating…";
+  const body = {
+    seed: Math.floor(Math.random() * 100000),
+    home: { formation: $("homeFormation").value, press: $("homePress").value },
+    away: { formation: $("awayFormation").value, press: $("awayPress").value },
+  };
+  const res = await fetch("/simulate", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  replay = await res.json();
+  frame = 0;
+  $("scrub").max = Math.max(0, replay.ticks.length - 1);
+  $("scrub").value = 0;
+  drawFrame(0); renderFacts();
+  $("controller").textContent =
+    "Controller: " + (replay.meta.controller || "unknown") +
+    ". These are the tactics you picked above — no trained agent is driving them yet, " +
+    "so the decisions below do not change during the match.";
+  $("sim").disabled = false; $("sim").textContent = "New match";
+}
+
+function togglePlay() {
+  if (timer) { clearInterval(timer); timer = null; $("play").textContent = "Play"; return; }
+  $("play").textContent = "Pause";
+  timer = setInterval(() => {
+    if (!replay || frame >= replay.ticks.length - 1) { togglePlay(); return; }
+    frame += 1; $("scrub").value = frame; drawFrame(frame);
+  }, 45);
+}
+
+(async function init() {
+  drawPitch();
+  const opts = await (await fetch("/options")).json();
+  const fill = (id, values) => {
+    $(id).innerHTML = values.map(v => `<option>${v}</option>`).join("");
+  };
+  fill("homeFormation", opts.formation); fill("awayFormation", opts.formation);
+  fill("homePress", opts.press); fill("awayPress", opts.press);
+  $("homePress").value = "gegenpress"; $("awayPress").value = "contain";
+  $("sim").onclick = simulate;
+  $("simPolicy").onclick = async () => {
+    $("simPolicy").disabled = true; $("simPolicy").textContent = "Coaching…";
+    const res = await fetch("/simulate_policy", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seed: Math.floor(Math.random() * 100000) }),
+    });
+    replay = await res.json();
+    frame = 0;
+    $("scrub").max = Math.max(0, replay.ticks.length - 1);
+    $("scrub").value = 0;
+    drawFrame(0); renderFacts();
+    $("controller").textContent = "Controller: " + replay.meta.controller +
+      ". The coach re-decides every 5 minutes; the highlighted row is the plan in force.";
+    $("simPolicy").disabled = false; $("simPolicy").textContent = "Run trained coach";
+  };
+  $("play").onclick = togglePlay;
+  $("scrub").oninput = (e) => { frame = +e.target.value; drawFrame(frame); };
+  await simulate();
+})();
+</script>
+</body>
+</html>

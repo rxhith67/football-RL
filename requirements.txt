@@ -1,0 +1,31 @@
+# GAFFER-RL dependencies
+# Verified against Python 3.11.9 on 15 Aug 2026.
+
+# --- Core numerics (Phase 0 onward) ---
+numpy>=2.0
+scipy>=1.13
+pandas>=2.2
+scikit-learn>=1.5
+pyyaml>=6.0
+
+# --- Environment & learning (Phase 2 onward) ---
+gymnasium>=1.0
+stable-baselines3>=2.7.0
+sb3-contrib>=2.7.0            # MaskablePPO, RecurrentPPO
+torch>=2.4
+
+# --- Analysis (Phase 3) ---
+nashpy>=0.0.41                # Nash equilibria for the EGTA payoff matrix
+matplotlib>=3.9
+
+# --- Console (Phase 2 onward) ---
+fastapi>=0.115
+uvicorn>=0.30
+
+# --- Data & infrastructure ---
+requests>=2.32
+huggingface-hub>=0.34         # tagged-checkpoint backup (see plan section 6.4)
+
+# --- Optional accelerators (only if the Phase-1 profile falls short) ---
+# numba>=0.60
+# modal>=1.0                  # CPU fan-out for EGTA / evaluation / seed sweeps

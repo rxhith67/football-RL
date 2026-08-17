@@ -1,0 +1,452 @@
+# Project Proposal: DeepCoach-RL
+
+**Event-Driven Hierarchical Reinforcement Learning for Tactical Football Management**
+
+---
+
+## 1. Executive Summary & Problem Statement
+
+Standard approaches to sports AI in physics-based environments like Google Research Football (GRF) focus heavily on micro-agent control. In these setups, deep neural networks dictate frame-by-frame low-level mechanics (e.g., passing, shooting, running) at 10 Hz. Across a 90-minute match (54,000 engine steps), this creates severe temporal credit assignment problems, requiring hundreds of millions of environment steps and massive multi-GPU clusters to achieve policy convergence.
+
+**DeepCoach-RL** re-architects sports management as an **Event-Driven Semi-Markov Decision Process (SMDP)**. Instead of controlling continuous physical movement, a central neural coach emits high-level macro-tactical directives—such as altering structural formations, adjusting defensive engagement heights, tweaking pressing intensity, and executing substitutions. Low-level player mechanics are handled natively by the engine's physics engine or low-level heuristics.
+
+By stepping the policy exclusively at macro-intervals (every 5 match minutes) or upon critical match events (goals, red cards, or severe fatigue), the episode horizon drops from 54,000 steps to **15–20 decision nodes**. This allows a pure PyTorch RL agent to discover complex, adaptive tactical strategies in a few hours on a single GPU.
+
+---
+
+## 2. System Architecture & Technical Novelty
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Google Research Football Engine                      │
+│               (3D Physics, 22 Players, 10 Hz Micro Execution)           │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │
+               Trigger Event (Every 5 mins / Goal / Red Card)
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    State Aggregator & Feature Vector                    │
+│                        S_t ∈ ℝ²⁸ Vector Extraction                       │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    MaskablePPO Neural Network Policy                    │
+│           (Action Masking Filters Invalid/Illegal Substitutions)        │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │
+                     Multi-Discrete Tactical Directive
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Macro-Action Execution Engine                        │
+│          Applies Formation, Line Height, Pressing & Substitutions        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+```
+
+### Key Technical Innovations
+
+1. **Semi-Markov Decision Process (SMDP) Temporal Compression:** Shrinks temporal credit assignment distance by $3,000\times$, linking late-game outcomes directly to intermediate macro-tactical interventions.
+
+
+2. **Action-Masked Multi-Discrete Control:** Incorporates `MaskablePPO` to dynamically enforce real-world sports constraints (e.g., substitution limits, player eligibility) directly within the policy's logit distribution.
+
+
+3. **Expected Goals ($\text{xG}$) Reward Shaping:** Evaluates intermediate performance using net shot-quality generation ($\Delta \text{xG}$) rather than raw goals, reducing stochastic variance in training signals.
+
+
+4. **Fictitious Self-Play League Training:** Trains the agent against a dynamic league pool of its historical checkpoints to prevent single-strategy exploits and build true tactical resilience.
+
+
+
+---
+
+## 3. Mathematical MDP Formulation
+
+### State Space ($S_t \in \mathbb{R}^{28}$)
+
+Extracted from the GRF environment telemetry vector upon each macro-trigger:
+
+* **Match Situation ($3$ features):** Score differential ($\Delta G \in [-10, 10]$), normalized remaining match time ($T_{\text{rem}} \in [0, 1]$), cumulative Expected Goals differential ($\text{xG}_{\text{diff}} \in [-5.0, 5.0]$).
+
+
+* **Squad Physical Condition ($11$ features):** Vector of individual stamina/fatigue levels for active players ($P_i \in [0, 1]$).
+
+
+* **Active Formations ($10$ features):** One-hot categorical vectors representing the team's active system ($\mathbf{F}_{\text{agent}} \in \{0, 1\}^5$) versus the opponent's active system ($\mathbf{F}_{\text{opp}} \in \{0, 1\}^5$).
+
+
+* **Field Spatial Control ($3$ features):** Share of ball possession held in the defensive, middle, and attacking thirds over the preceding 5-minute interval.
+* **Disciplinary Status ($1$ feature):** Active yellow/red card penalty count accumulated by the team.
+
+
+
+### Multi-Discrete Action Space ($A_t$)
+
+1. **Formation ($A_{\text{form}} \in \{0..4\}$):** $0 \to 4\text{-}3\text{-}3$, $1 \to 4\text{-}2\text{-}3\text{-}1$, $2 \to 3\text{-}5\text{-}2$, $3 \to 5\text{-}4\text{-}1$, $4 \to 3\text{-}4\text{-}3$.
+
+
+2. **Defensive Line Height ($A_{\text{line}} \in \{0..2\}$):** $0 \to \text{Low Block}$, $1 \to \text{Mid Line}$, $2 \to \text{High Offside Trap}$.
+3. **Pressing Intensity ($A_{\text{press}} \in \{0..2\}$):** $0 \to \text{Containment}$, $1 \to \text{Balanced}$, $2 \to \text{Gegenpress}$.
+
+
+4. **Substitutions ($A_{\text{sub}} \in \{0..5\}$):** $0 \to \text{No Sub}$, $1..5 \to \text{Swap most fatigued starter with Bench Player } 1..5$.
+
+
+
+### Reward Function ($R_t$)
+
+$$R_t = R_{\text{terminal}} + \alpha \cdot \Delta \text{xG}_t - \beta \sum_{i=1}^{11} \max(0, 0.35 - P_{i, t}) - \gamma \cdot \mathbb{I}(A_t \neq A_{t-1})$$
+
+Where:
+
+* $R_{\text{terminal}} = +1.0$ (Win), $0.0$ (Draw), $-1.0$ (Loss) at minute 90.
+
+
+* $\Delta \text{xG}_t$: Net change in Expected Goals created minus conceded during the 5-minute window ($\alpha = 0.2$).
+
+
+* $\beta = 0.5$: Penalizes allowing any player's stamina to drop below $35\%$, forcing timely substitutions.
+
+
+* $\gamma = 0.05$: Friction penalty applied if tactics change every single step, promoting strategic stability.
+
+
+
+---
+
+# Step-by-Step Implementation Plan
+
+## 1. Environment & Tech Stack Setup
+
+### System Requirements
+
+* **OS:** Ubuntu 22.04 LTS / Debian 11 (or WSL2).
+
+
+* **Compute:** 1 NVIDIA GPU (A10G, L40S, or RTX 3090/4090) with 12GB+ VRAM.
+
+
+* **Python Environment:** Python 3.10.
+
+
+
+### Dependency Installation
+
+```bash
+# System libraries for Google Research Football C++ compilation
+sudo apt-get update && sudo apt-get install -y \
+    git cmake build-essential libgl1-mesa-dev libsdl2-dev \
+    libsdl2-image-dev libsdl2-ttf-dev libsdl2-gfx-dev \
+    libboost-all-dev libdirectfb-dev libst-dev mesa-utils xvfb
+
+# Python packages
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+pip install gfootball gymnasium stable-baselines3 sb3-contrib streamlit plotly pandas numpy
+
+```
+
+---
+
+## 2. Project Directory Structure
+
+deepcoach_rl/
+├── config/
+│   └── hyperparams.yaml          # PPO learning rates, gamma, entropy coefficients
+├── src/
+│   ├── **init**.py
+│   ├── env_wrapper.py            # SMDP Football Environment & Action Masker
+│   ├── reward_engine.py          # xG & stamina reward calculator
+│   ├── league_manager.py         # Self-play checkpoint pool manager
+│   └── utils.py                  # Tactical positional matrix generators
+├── dashboard/
+│   └── app.py                    # Streamlit visual simulation dashboard
+├── checkpoints/                  # Saved PyTorch policy weights
+├── train.py                      # Main RL training loop
+└── evaluate.py                   # Benchmark testing script vs baselines
+
+---
+
+## 3. Core Module Implementations
+
+### A. Environment Wrapper (`src/env_wrapper.py`)
+
+```python
+import gymnasium as gym
+from gymnasium import spaces
+import numpy as np
+import gfootball.env as football_env
+
+class SMDPFootballEnv(gym.Env):
+    """
+    Event-Driven Semi-Markov Decision Process Wrapper around Google Research Football.
+    Steps physics for 5-minute macro intervals or critical game events.
+    """
+    def __init__(self, render=False):
+        super().__init__()
+        # Initialize underlying GRF physics engine
+        self.grf_env = football_env.create_environment(
+            env_name="11_vs_11_easy_stochastic",
+            stacked=False,
+            representation="raw",
+            rewards="scoring",
+            write_goal_dumps=False,
+            write_full_episode_dumps=False,
+            render=render
+        )
+        
+        # Multi-Discrete Action Space: [Formation, LineHeight, Pressing, Substitution]
+        self.action_space = spaces.MultiDiscrete([5, 3, 3, 6])
+        
+        # State Space: Vector S_t in R^28
+        self.observation_space = spaces.Box(
+            low=-10.0, high=10.0, shape=(28,), dtype=np.float32
+        )
+        
+        self.subs_used = 0
+        self.max_subs = 5
+        self.last_action = np.zeros(4, dtype=int)
+        self.prev_xg_diff = 0.0
+
+    def get_action_mask(self) -> np.ndarray:
+        """
+        Generates dynamic binary masks for MaskablePPO.
+        Prevents illegal substitutions when sub quota (5) is exhausted.
+        """
+        # Mask arrays for each multi-discrete dimension
+        mask = [
+            np.ones(5, dtype=bool),  # Formations (all 5 valid)
+            np.ones(3, dtype=bool),  # Line Height (all 3 valid)
+            np.ones(3, dtype=bool),  # Pressing (all 3 valid)
+            np.ones(6, dtype=bool)   # Substitutions
+        ]
+        
+        # If substitution cap reached, mask out sub options 1..5
+        if self.subs_used >= self.max_subs:
+            mask[3][1:] = False
+            
+        return mask
+
+    def _extract_state(self, obs) -> np.ndarray:
+        """Parses raw GRF dictionary into normalized 28-dimensional state vector."""
+        raw = obs[0] if isinstance(obs, list) else obs
+        
+        # Extract features
+        score_diff = float(raw['score'][0] - raw['score'][1])
+        time_rem = float(1500 - raw['steps_completed']) / 1500.0  # 1500 steps = 90 mins
+        stamina = np.array(raw['right_team_tired_factor'][:11], dtype=np.float32) # Normalized 0..1
+        
+        # Placeholder for calculated xG difference
+        xg_diff = self.prev_xg_diff
+        
+        # Possession in 3 zones (Defensive, Mid, Attack)
+        ball_x = raw['ball'][0] # -1.0 to 1.0
+        poss_def = 1.0 if ball_x < -0.33 else 0.0
+        poss_mid = 1.0 if -0.33 <= ball_x <= 0.33 else 0.0
+        poss_att = 1.0 if ball_x > 0.33 else 0.0
+        
+        cards = float(np.sum(raw['left_team_yellow_card']))
+        
+        # Formations (One-Hot Encoded 5-dim vectors)
+        agent_form = np.zeros(5, dtype=np.float32)
+        agent_form[self.last_action[0]] = 1.0
+        
+        opp_form = np.zeros(5, dtype=np.float32)
+        opp_form[0] = 1.0  # Default baseline opponent system
+        
+        state_vec = np.hstack([
+            [score_diff, time_rem, xg_diff],
+            stamina,
+            agent_form,
+            opp_form,
+            [poss_def, poss_mid, poss_att],
+            [cards]
+        ]).astype(np.float32)
+        
+        return state_vec
+
+    def reset(self, seed=None, options=None):
+        raw_obs = self.grf_env.reset()
+        self.subs_used = 0
+        self.last_action = np.zeros(4, dtype=int)
+        self.prev_xg_diff = 0.0
+        state = self._extract_state(raw_obs)
+        return state, {}
+
+    def step(self, action):
+        # Update substitution tracking if sub executed
+        if action[3] > 0 and self.subs_used < self.max_subs:
+            self.subs_used += 1
+            
+        # Unroll physics engine for 83 steps (~5 match minutes in GRF)
+        macro_steps = 83
+        accumulated_reward = 0.0
+        done = False
+        
+        for _ in range(macro_steps):
+            raw_obs, reward, done, info = self.grf_env.step(action)
+            accumulated_reward += reward
+            if done:
+                break
+                
+        # Calculate State & Composite SMDP Reward
+        state = self._extract_state(raw_obs)
+        
+        # Compute Reward
+        stamina_pen = np.sum(np.maximum(0.0, 0.35 - state[3:14]))
+        tactical_friction = 0.05 if np.any(action != self.last_action) else 0.0
+        
+        smdp_reward = accumulated_reward - (0.5 * stamina_pen) - tactical_friction
+        self.last_action = action
+        
+        return state, smdp_reward, done, False, {}
+
+```
+
+### B. Training Script with Self-Play Checkpointing (`train.py`)
+
+```python
+import os
+import torch
+from sb3_contrib import MaskablePPO
+from sb3_contrib.common.maskable.policies import MaskableActorCriticPolicy
+from src.env_wrapper import SMDPFootballEnv
+
+def train_deepcoach():
+    checkpoint_dir = "./checkpoints/"
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    
+    # Instantiate Environment
+    env = SMDPFootballEnv(render=False)
+    
+    # Initialize MaskablePPO
+    model = MaskablePPO(
+        policy=MaskableActorCriticPolicy,
+        env=env,
+        learning_rate=3e-4,
+        n_steps=128,              # Macro-steps per update batch
+        batch_size=32,
+        n_epochs=10,
+        gamma=0.99,
+        gae_lambda=0.95,
+        clip_range=0.2,
+        ent_coef=0.01,
+        verbose=1,
+        tensorboard_log="./tb_logs/"
+    )
+    
+    print("--- Starting DeepCoach-RL SMDP Training ---")
+    total_timesteps = 100_000  # Equivalent to ~5,000 full matches
+    
+    # Training Loop with Checkpointing for Self-Play League Pool
+    save_interval = 10_000
+    for step in range(0, total_timesteps, save_interval):
+        model.learn(total_timesteps=save_interval, reset_num_timesteps=False)
+        checkpoint_path = os.path.join(checkpoint_dir, f"deepcoach_step_{step + save_interval}.zip")
+        model.save(checkpoint_path)
+        print(f"[CHECKPOINT] Saved League Checkpoint: {checkpoint_path}")
+
+if __name__ == "__main__":
+    train_deepcoach()
+
+```
+
+---
+
+## 4. Visual Analytics Dashboard Specification (`dashboard/app.py`)
+
+The system includes an interactive dashboard built with Streamlit and Plotly:
+
+```python
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+
+st.set_page_config(page_title="DeepCoach-RL Tactical Monitor", layout="wide")
+st.title("⚽ DeepCoach-RL: AI Tactical Match Control")
+
+# Sidebar Controls
+st.sidebar.header("Match Control Panel")
+selected_checkpoint = st.sidebar.selectbox("Select Model Checkpoint", ["Step 20,000", "Step 50,000", "Step 100,000"])
+run_sim = st.sidebar.button("Run Simulation Match")
+
+# Main View Columns
+col1, col2 = st.columns([2, 1])
+
+with col1:
+    st.subheader("Live Match Telemetry & xG Trajectory")
+    # Mock Match Timeline Data
+    timeline_df = pd.DataFrame({
+        "Minute": np.arange(0, 95, 5),
+        "Agent_xG": np.cumsum(np.random.exponential(0.1, 19)),
+        "Opponent_xG": np.cumsum(np.random.exponential(0.08, 19))
+    })
+    
+    fig = px.line(timeline_df, x="Minute", y=["Agent_xG", "Opponent_xG"], 
+                  title="Cumulative Expected Goals (xG) Progression",
+                  labels={"value": "Expected Goals (xG)", "variable": "Team"})
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+    st.subheader("Current Active Tactics")
+    st.metric(label="Active Formation", value="3-5-2 Wing-Back", delta="Switched at Min 60")
+    st.metric(label="Defensive Line", value="High Offside Trap")
+    st.metric(label="Pressing Intensity", value="Gegenpress")
+    st.metric(label="Substitutions Remaining", value="2 / 5")
+
+st.markdown("---")
+st.subheader("Team Stamina Heatmap")
+stamina_data = np.random.uniform(0.4, 0.95, (1, 11))
+fig_stamina = px.imshow(stamina_data, labels=dict(x="Player Position", y="Team", color="Stamina"),
+                        x=['GK', 'CB1', 'CB2', 'LB', 'RB', 'CM1', 'CM2', 'CAM', 'RW', 'LW', 'ST'],
+                        color_continuous_scale="RdYlGn", range_color=[0, 1])
+st.plotly_chart(fig_stamina, use_container_width=True)
+
+```
+
+To run the dashboard:
+
+```bash
+streamlit run dashboard/app.py
+
+```
+
+---
+
+## 5. Phased Roadmap & Evaluation Benchmarks
+
+| Milestone | Objective | Deliverables | Target Completion |
+| --- | --- | --- | --- |
+| **Phase 1: Environment Engine** | Wrap GRF into SMDP Gym environment with multi-discrete action space and action masking.
+
+ | Working `SMDPFootballEnv` with step-reset verification. | Day 1 |
+| **Phase 2: Baseline Policy Training** | Train `MaskablePPO` policy against static heuristics (4-3-3 High Press) for 50,000 steps.
+
+ | Reward convergence curve, baseline policy weights.
+
+ | Day 2 |
+| **Phase 3: Self-Play League Training** | Implement Fictitious Self-Play pool to evaluate dynamic opponent adaptation.
+
+ | Checkpoint pool, Win-Rate progression matrix.
+
+ | Day 3 |
+| **Phase 4: Dashboard & Verification** | Link Streamlit dashboard to model execution engine for live match visualization.
+
+ | Complete codebase, Streamlit UI, quantitative evaluation metrics.
+
+ | Day 4 |
+
+### Quantitative Success Criteria
+
+* **Win Rate vs. Fixed Heuristic:** $> 70\%$ win rate against standard Google Research Football rule-based AI.
+
+
+* **Comeback Recovery Rate:** $> 45\%$ win/draw recovery rate when trailing at halftime.
+* **Stamina Conservation:** Zero instances of players dropping below $20\%$ stamina in late-game stages (validating substitution policy efficacy).
+
+
+* **Training Efficiency:** Full convergence achieved in $< 4$ hours on a single GPU.

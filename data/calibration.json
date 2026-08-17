@@ -1,0 +1,27 @@
+{
+  "tuning": {
+    "score_gain": 25.0,
+    "shot_cost": 0.12,
+    "epv_max": 0.45,
+    "carry_speed": 0.48,
+    "tackle_base": 20.0,
+    "tackle_range": 2.8,
+    "collapse_near": 20.0,
+    "collapse_mid": 35.0,
+    "matchup_gain": 0.7,
+    "through_fraction": 0.15
+  },
+  "loss": 1.7456347577412286,
+  "stats": {
+    "goals_per_match": 3.8333333333333335,
+    "shots_per_team": 9.010416666666666,
+    "xg_per_shot": 0.22832519123116116,
+    "xg_per_team": 2.053570312558945,
+    "pass_completion": 0.5836502190432945,
+    "passes_per_team": 698.609375,
+    "win_rate_asymmetry": 0.17708333333333334,
+    "asymmetry_se": 0.1370528028928885,
+    "asymmetry_z": 1.3032384104613854,
+    "n_matches": 32.0
+  }
+}

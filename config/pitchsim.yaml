@@ -1,0 +1,156 @@
+# GAFFER-RL — PITCHSIM physics and event-layer constants.
+# FROZEN in Phase 0 (plan section 3.2). Tier 1 fields are used by the Phase-1
+# gated build; Tier 2 fields are consumed only once the un-gated layer lands.
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# TIER 1 — gated at Gate 1
+# ---------------------------------------------------------------------------
+pitch:
+  length_m: 105.0
+  width_m: 68.0
+  goal_width_m: 7.32
+
+time:
+  # First rung of the plan's escalation ladder (section 3.2), taken 15 Aug 2026:
+  # dt 0.2 -> 0.4 gave a 5x throughput gain (22 -> 112 matches/min at 32 envs)
+  # with calibration statistics unchanged within noise (goals/match 26.12 -> 25.78,
+  # pass completion 0.641 -> 0.640), so the coarser integration costs nothing here.
+  dt: 0.4                      # seconds per physics tick
+  match_minutes: 90.0
+  ticks_per_match: 13500       # 90 * 60 / 0.4
+  # On-ball "decision time". A real match has roughly 1,000-1,200 on-ball events
+  # in total; at 0.6-1.4 s the event layer fired ~5,400 times and produced pinball
+  # rather than football, so this is calibrated, not guessed.
+  decision_interval_s: [1.6, 3.4]
+
+players:
+  per_side: 11
+  max_speed_mps: [6.8, 8.2]    # sampled per player
+  accel_mps2: 3.5
+  stamina_init: 1.0            # 1 = fresh (NOT the GRF tired_factor convention)
+  # Per second at balanced press. Budgeted against the whole match rather than
+  # guessed: drain/s * (0.35 + effort^2) * 5400 s should land a typical player
+  # near 0.55-0.70 at full time, leaving room for the fatigue term in the reward
+  # and for substitutions to matter. At the original 0.0009 the integral came to
+  # ~4.1, so every player sat on the 0.02 floor from about minute 20 and both
+  # mechanics were dead.
+  stamina_drain_base: 0.00011
+  stamina_recovery: 0.00006    # per second during own possession phases
+  speed_at_zero_stamina: 0.65  # fraction of max speed when exhausted
+
+ball:
+  decel_mps2: 0.55             # constant-deceleration ground model
+  max_pass_speed_mps: 26.0
+  aerial_flight_time_s: [0.8, 2.2]
+
+# Expected-value scoring for on-ball option selection (plan section 3.2).
+# These weights are the second calibration knob after config/tactics.yaml modifiers.
+event_layer:
+  options: [short_pass, long_pass, dribble, shot, clearance]
+  ev_weights:
+    pitch_control: 1.00        # P(retain) from the time-to-intercept surface
+    epv_gain: 1.20             # change in expected possession value
+    risk: 1.00                 # scaled by the tempo head's risk_weight
+  pitch_control:
+    reaction_time_s: 0.7
+    sigma_logistic: 0.45       # steepness of the time-to-intercept sigmoid
+    grid: [52, 34]             # 2 m resolution for the heatmap panel
+
+# xG model — fitted on real StatsBomb shots, never hand-specified.
+# Evaluated by 5-fold GroupKFold on match_id (shots within a match share context,
+# so a shot-level split would leak). See pitchsim/xg.py.
+xg:
+  features: [distance_m, angle_rad, defenders_in_cone, nearest_defender_m,
+             gk_off_line_m, gk_lateral_m, is_header, is_open_play, under_pressure,
+             is_first_time, is_one_on_one, is_volley, from_counter]
+  model_path: data/statsbomb/xg_model.json
+  min_auc: 0.75                # Gate 0 acceptance criterion (pooled out-of-fold)
+  n_folds: 5
+
+# ---------------------------------------------------------------------------
+# Tuning knobs — the free parameters of the event and duel layers.
+#
+# These are COUPLED: making passing riskier pushes the option softmax toward
+# shooting and dribbling, so hand-tuning them one at a time chases its own tail.
+# They are swept jointly by `python -m pitchsim.calibrate --sweep`, which is the
+# defensible way to hit the acceptance bands and produces the sim-vs-real table
+# that Part C reports.
+# ---------------------------------------------------------------------------
+# Output of `--sweep` (coordinate descent, 3 seeds averaged, 40 matches each,
+# 15 Aug 2026), re-run AFTER the stamina bug fix. Search loss 1.80 -> 0.00:
+# goals/match 5.88 -> 2.38 (real 2.49), shots/team 13.7 -> 9.7 (real 12.19),
+# xG/shot -> 0.125, xG/team -> 1.217 (real ~1.2).
+#
+# Do NOT hand-edit these without re-running the sweep. They are strongly coupled:
+# making passing riskier pushes the option softmax toward shooting, so moving one
+# knob alone undoes the others. Two lessons are worth keeping in the report:
+#   * `tackle_base` dominates — at its original 1.45 an attack was unstoppable.
+#   * The pre-fix operating point was silently compensating for exhausted players
+#     moving at the speed floor. Fixing stamina invalidated it and forced this
+#     re-sweep, which is why the search range had to reopen rather than nudge.
+tuning:
+  score_gain: 25.0
+  shot_cost: 0.08
+  epv_max: 0.55
+  carry_speed: 0.48
+  tackle_base: 20.0
+  tackle_range: 2.8
+  collapse_near: 20.0
+  collapse_mid: 35.0
+  matchup_gain: 1.10
+  # How far the whole shape slides toward the ball. THE dominant driver of how
+  # much stronger an aggressive tactic is than a balanced one: at 0.55 extreme
+  # tactics generated 3.3x the goals of balanced ones and no combination of the
+  # shooting/tackling knobs could close that gap. Dropping to 0.40 cut the ratio
+  # to 1.7x and the joint calibration loss from 6.00 to 0.57. Below ~0.30 the
+  # balanced match collapses instead (teams cannot get forward at all), so this
+  # is a genuine optimum rather than a monotone knob.
+  shape_follow: 0.40
+  through_fraction: 0.50
+duels:
+  base_win_prob: 0.50
+  numbers_advantage_weight: 0.12
+  stamina_weight: 0.25
+
+fouls:
+  base_rate_per_min: 0.24      # scaled by the press head's foul_rate
+  yellow_given_foul: 0.14
+  second_yellow_given_yellow: 0.05
+  dangerous_zone_multiplier: 1.4
+
+set_pieces:
+  corner_xg: 0.031
+  free_kick_direct_xg: 0.058
+  throw_in_retention: 0.72
+
+# ---------------------------------------------------------------------------
+# Calibration acceptance bands — Gate 1 conditions (plan section 3.2 table).
+# `calibrate.py` emits sim-vs-real and pass/fail against exactly these.
+#
+# `real` values are MEASURED from the 8,536-shot / 350-match StatsBomb sample
+# built by pitchsim/statsbomb.py on 15 Aug 2026, not quoted from memory.
+# Regenerate with: python -m pitchsim.statsbomb --summary
+# ---------------------------------------------------------------------------
+calibration:
+  source: "StatsBomb open data, 350 matches / 8536 shots, measured 2026-08-15"
+  targets:
+    goals_per_match:      {real: 2.49, band: [2.3, 3.1]}
+    shots_per_team:       {real: 12.19, band: [9.0, 15.0]}
+    xg_per_shot:          {real: 0.0985, band: [0.08, 0.13]}
+    # Pass completion is not yet measured — the shot table does not carry passes.
+    # Owner A: measure it during Phase 1 before relying on this band.
+    pass_completion:      {real: 0.80, band: [0.72, 0.88], measured: false}
+  symmetry:
+    # Neutral venue, so the null hypothesis is home_win_rate == away_win_rate.
+    # Tested with a two-sided z-test (|z| < 1.96) rather than a fixed tolerance:
+    # at ~100 matches the standard error is around 0.07, so any fixed threshold
+    # tighter than that fails on sampling noise and says nothing about the engine.
+    max_abs_z: 1.96
+  performance:
+    # Throughput scales strongly with batch, since the tick loop's Python overhead
+    # is amortised across matches: 32 envs -> 112 matches/min, 64 -> 183,
+    # 128 -> 287, all with calibration statistics unchanged. Measured 15 Aug 2026.
+    min_matches_per_min: 300
+    n_envs: 192

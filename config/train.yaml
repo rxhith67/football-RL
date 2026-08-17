@@ -1,0 +1,113 @@
+# GAFFER-RL — MDP, curriculum and training hyperparameters.
+# Plan sections 3.3 and 3.5.
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# SMDP decision epochs (plan section 3.3)
+# ---------------------------------------------------------------------------
+smdp:
+  scheduled_minutes: [5, 10, 15, 20, 25, 30, 35, 40, 45,
+                      50, 55, 60, 65, 70, 75, 80, 85]
+  triggers: [goal_for, goal_against, red_card, half_time, belief_entropy_jump]
+  belief_entropy_jump_threshold: 0.35     # nats, epoch-over-epoch
+  gamma_per_minute: 0.995                 # discount is gamma^tau, tau in sim-minutes
+  # NOTE: flat-gamma is an ablation (plan section 5), not the default.
+
+# ---------------------------------------------------------------------------
+# Reward (plan section 3.3). `w` is set by the scale argument there:
+# shaping telescopes to w * final xG difference, so w ~= 0.3 keeps typical
+# shaping (~0.3) below the terminal +-1. Too large and the agent optimises xG
+# while losing; too small and shaping is a no-op hyperparameter.
+# ---------------------------------------------------------------------------
+reward:
+  terminal: {win: 1.0, draw: 0.0, loss: -1.0}
+  shaping_w: 0.30                         # potential-based, policy-invariant
+  shaping_w_sweep: [0.0, 0.15, 0.30, 0.60]
+  lambda_fatigue: 0.30
+  fatigue_threshold: 0.35                 # mean squared stamina deficit below this
+  lambda_churn: 0.02
+
+# ---------------------------------------------------------------------------
+# Observation (~55 dims, plan section 3.3). Assembled by envs/coach_env.py.
+# The opponent's tactic vector is NEVER included — only its statistical footprint.
+# ---------------------------------------------------------------------------
+observation:
+  blocks:
+    match_state: 5          # score diff, minutes left, subs left, windows left, own red card
+    squad: 13               # 11 stamina + count below threshold + yellow count
+    # 9 observables: possession, shots for/against, xG for/against, field tilt,
+    # PPDA, pass completion, mean pass length. The last was added on 15 Aug 2026
+    # (SCHEMA_VERSION 2) — plan section 3.3 lists a pass-length profile, and
+    # without it a low-block counter side is statistically indistinguishable
+    # from a balanced mid-block one.
+    own_form: 9
+    opponent_form: 9        # same statistics, opponent side
+    own_tactic_onehot: 14   # formation(5) + block(3) + press(3) + tempo(3)
+    belief: 6               # K archetypes
+  total: 56
+  rolling_window_minutes: 15.0
+
+# ---------------------------------------------------------------------------
+# Belief filter (plan section 3.4)
+# ---------------------------------------------------------------------------
+belief:
+  mode: bayesian            # bayesian | recurrent | oracle | blind
+  n_archetypes: 6
+  # Off-diagonal mass must be non-trivial because scripted opponents genuinely
+  # switch mid-match; this is a reportable hyperparameter, not a formality.
+  transition_self_prob: 0.90
+  min_variance: 1.0e-4      # Gaussian regularisation
+
+# ---------------------------------------------------------------------------
+# Curriculum (plan section 3.5)
+# ---------------------------------------------------------------------------
+curriculum:
+  stage_0_sanity:      {opponent: balanced_442, macro_steps: 150000}
+  stage_1_gauntlet:    {opponent: uniform_archetype, macro_steps: 400000}
+  stage_2_pfsp:        {opponent: checkpoint_pool, macro_steps: 600000,
+                        snapshot_every: 50000, pfsp_weighting: one_minus_winrate}
+
+# ---------------------------------------------------------------------------
+# Algorithms
+# ---------------------------------------------------------------------------
+maskable_ppo:
+  policy: MlpPolicy
+  n_envs: 32
+  n_steps: 256
+  batch_size: 2048
+  learning_rate: 3.0e-4
+  gamma: 0.995              # overridden per-transition by gamma^tau
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.01            # guards against self-play tactic collapse
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+  net_arch: [128, 128]
+
+tabular_q:
+  # Abstraction is specified, not improvised (plan section 3.5):
+  # 5 score-diff x 3 phase x 3 stamina x 6 MAP-archetype = 4050 states,
+  # actions coarsened to formation(5) x press(3) = 15 => ~61k Q-values.
+  score_diff_bins: [-2, -1, 0, 1, 2]
+  phase_bins_minutes: [30, 60, 90]
+  stamina_bins: [0.45, 0.70]
+  action_heads: [formation, press]
+  learning_rate: 0.10
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+
+# ---------------------------------------------------------------------------
+# Evaluation protocol — PRE-REGISTERED, fixed before training (plan section 5)
+# ---------------------------------------------------------------------------
+evaluation:
+  matches_per_cell: 500
+  seeds: 5
+  bootstrap_resamples: 10000
+  ci: 0.95
+  egta_matches_per_pairing: 300
+  scripted_roundrobin_matches: 200        # Gate 1 non-transitivity check
+  exploitability:
+    macro_steps: 200000                   # DECLARED budget; the number is
+    seeds: 3                              # meaningless without it
+    eval_matches: 500

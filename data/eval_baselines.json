@@ -1,0 +1,98 @@
+{
+  "random": {
+    "n_matches": 120,
+    "points_per_match": 1.2166666666666666,
+    "ppm_ci": [
+      0.9916666666666667,
+      1.4416666666666667
+    ],
+    "win_rate": 0.30833333333333335,
+    "draw_rate": 0.2916666666666667,
+    "loss_rate": 0.4,
+    "goal_diff": -0.7333333333333333,
+    "goal_diff_ci": [
+      -1.2333333333333334,
+      -0.26666666666666666
+    ],
+    "xg_diff": 0.0,
+    "comeback_rate": NaN,
+    "comeback_ci": [
+      NaN,
+      NaN
+    ],
+    "n_trailing_at_half": 0,
+    "belief_accuracy": 0.21666666666666667
+  },
+  "static": {
+    "n_matches": 120,
+    "points_per_match": 0.65,
+    "ppm_ci": [
+      0.5,
+      0.8083333333333333
+    ],
+    "win_rate": 0.08333333333333333,
+    "draw_rate": 0.4,
+    "loss_rate": 0.5166666666666667,
+    "goal_diff": -1.125,
+    "goal_diff_ci": [
+      -1.4333333333333333,
+      -0.8331250000000031
+    ],
+    "xg_diff": 0.0,
+    "comeback_rate": NaN,
+    "comeback_ci": [
+      NaN,
+      NaN
+    ],
+    "n_trailing_at_half": 0,
+    "belief_accuracy": 0.30833333333333335
+  },
+  "greedy": {
+    "n_matches": 120,
+    "points_per_match": 1.025,
+    "ppm_ci": [
+      0.925,
+      1.1416666666666666
+    ],
+    "win_rate": 0.06666666666666667,
+    "draw_rate": 0.825,
+    "loss_rate": 0.10833333333333334,
+    "goal_diff": -0.09166666666666666,
+    "goal_diff_ci": [
+      -0.225,
+      0.03333333333333333
+    ],
+    "xg_diff": 0.0,
+    "comeback_rate": NaN,
+    "comeback_ci": [
+      NaN,
+      NaN
+    ],
+    "n_trailing_at_half": 0,
+    "belief_accuracy": 0.375
+  },
+  "tabular_q": {
+    "n_matches": 120,
+    "points_per_match": 0.5666666666666667,
+    "ppm_ci": [
+      0.425,
+      0.7166666666666667
+    ],
+    "win_rate": 0.06666666666666667,
+    "draw_rate": 0.36666666666666664,
+    "loss_rate": 0.5666666666666667,
+    "goal_diff": -1.2583333333333333,
+    "goal_diff_ci": [
+      -1.625,
+      -0.9166666666666666
+    ],
+    "xg_diff": 0.0,
+    "comeback_rate": NaN,
+    "comeback_ci": [
+      NaN,
+      NaN
+    ],
+    "n_trailing_at_half": 0,
+    "belief_accuracy": 0.25
+  }
+}
