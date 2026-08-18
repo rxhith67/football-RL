@@ -58,7 +58,12 @@ def play_pairing(
 
     points = np.where(row_goals > col_goals, 3.0,
                       np.where(row_goals == col_goals, 1.0, 0.0))
-    return float(points.mean()), float((row_goals - col_goals).mean())
+    diff = row_goals - col_goals
+    # Standard error of the mean goal difference. Without it a payoff entry of
+    # +0.5 is indistinguishable from -0.5 and any cycle built on such an edge is
+    # an artefact of the sample, not a property of the game.
+    stderr = float(np.std(diff, ddof=1) / np.sqrt(max(len(diff), 1))) if len(diff) > 1 else 0.0
+    return float(points.mean()), float(diff.mean()), stderr
 
 
 def scripted_payoff(matches_per_pairing: int | None = None, seed: int = 0,
@@ -74,6 +79,7 @@ def scripted_payoff(matches_per_pairing: int | None = None, seed: int = 0,
     _, labels, base = archetype_table()
     points = np.zeros((N_ARCHETYPES, N_ARCHETYPES))
     goal_diff = np.zeros((N_ARCHETYPES, N_ARCHETYPES))
+    stderr = np.zeros((N_ARCHETYPES, N_ARCHETYPES))
 
     for i in range(N_ARCHETYPES):
         for j in range(N_ARCHETYPES):
@@ -82,13 +88,15 @@ def scripted_payoff(matches_per_pairing: int | None = None, seed: int = 0,
                 continue
             if j < i:
                 continue
-            ppm, gd = play_pairing(base[i], base[j], matches_per_pairing, seed + i * 17 + j)
+            ppm, gd, se = play_pairing(base[i], base[j], matches_per_pairing,
+                                       seed + i * 17 + j)
             points[i, j], goal_diff[i, j] = ppm, gd
+            stderr[i, j] = stderr[j, i] = se
             # Zero-sum in goal difference; points are recovered from the same games.
             points[j, i], goal_diff[j, i] = 3.0 - ppm - _draw_share(ppm), -gd
         if verbose:
             print(f"  {labels[i]:24} done", flush=True)
-    return points, goal_diff
+    return points, goal_diff, stderr
 
 
 def _draw_share(ppm: float) -> float:
@@ -102,13 +110,23 @@ def _draw_share(ppm: float) -> float:
     return 0.0
 
 
-def find_cycles(matrix: np.ndarray) -> list[tuple[int, ...]]:
+def find_cycles(matrix: np.ndarray, stderr: np.ndarray | None = None,
+                z: float = 2.0) -> list[tuple[int, ...]]:
     """All 3-cycles in the 'beats' relation implied by `matrix`.
 
-    `matrix[i, j] > 0` means i beats j. A cycle i -> j -> k -> i is exactly the
-    rock-paper-scissors structure Pillar 2 claims to find.
+    A cycle i -> j -> k -> i is the rock-paper-scissors structure the tactic-space
+    analysis claims to find, so every edge in it must be REAL.
+
+    With `stderr` supplied, i only "beats" j when the margin clears `z` standard
+    errors. This is not pedantry: with a bare sign test the same configuration
+    reported three cycles at 30 matches per pairing and none at 40, because every
+    one of them ran through a High-press vs Direct edge worth +0.47 goals — well
+    inside the noise. A cycle resting on an edge that flips with the sample is an
+    artefact, and reporting it would have been a false positive.
     """
     beats = matrix > 0
+    if stderr is not None:
+        beats &= np.abs(matrix) > z * np.maximum(stderr, 1e-9)
     cycles = []
     for i, j, k in combinations(range(len(matrix)), 3):
         if beats[i, j] and beats[j, k] and beats[k, i]:
@@ -138,9 +156,9 @@ def run(matches: int | None = None, seed: int = 0, verbose: bool = True) -> dict
     _, labels, _ = archetype_table()
     if verbose:
         print("scripted round-robin...", flush=True)
-    points, goal_diff = scripted_payoff(matches, seed, verbose)
+    points, goal_diff, stderr = scripted_payoff(matches, seed, verbose)
 
-    cycles = find_cycles(goal_diff)
+    cycles = find_cycles(goal_diff, stderr)
     ratio = transitivity_ratio(goal_diff)
     passed = len(cycles) > 0
 
@@ -153,6 +171,9 @@ def run(matches: int | None = None, seed: int = 0, verbose: bool = True) -> dict
                                                for j in range(N_ARCHETYPES)))
         print("-" * (22 + 10 * N_ARCHETYPES))
         print(f"  transitivity (variance explained by a single rating): {ratio:.3f}")
+        print(f"  median |goal diff| {np.median(np.abs(goal_diff[~np.eye(N_ARCHETYPES, dtype=bool)])):.2f}"
+              f"  median SE {np.median(stderr[~np.eye(N_ARCHETYPES, dtype=bool)]):.2f}"
+              f"  (edges need > 2 SE to count)")
         print(f"  3-cycles found: {len(cycles)}")
         for a, b, c in cycles[:6]:
             print(f"    {labels[a]} > {labels[b]} > {labels[c]} > {labels[a]}")
@@ -166,6 +187,7 @@ def run(matches: int | None = None, seed: int = 0, verbose: bool = True) -> dict
     result = {
         "labels": labels,
         "goal_diff": goal_diff.tolist(),
+        "stderr": stderr.tolist(),
         "points": points.tolist(),
         "cycles": [[labels[i] for i in cyc] for cyc in cycles],
         "n_cycles": len(cycles),

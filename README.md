@@ -67,28 +67,47 @@ Phases are gated by **evidence**, not dates. Full detail in §6 of the plan.
 | **3** | Science (EGTA, ablations) | **feature freeze 15 Oct** | 🟡 harnesses built |
 | **4** | Consolidation | demo runs offline, cable pulled | 🟡 console built |
 
-### Gate 1 detail (16 Aug)
+### Gate 1 detail (18 Aug)
 
 | Condition | State |
 |---|---|
-| Looks like football | not yet judged — `scripts/animate_match.py` written, not rendered |
-| Calibration bands | ✅ at the balanced matchup (4/4 held-out seeds) · ❌ across the full tactic space |
-| Throughput ≥ 300/min | ✅ 287/min at 128 envs |
-| Separability ≥ 70% | 🟡 overall **0.710** (passes) but worst recall **0.321** (needs ≥ 0.50) |
-| Non-transitive cycle | ❌ 0 cycles; transitivity 0.678 |
+| Archetype separability | ✅ 0.719 accuracy, 0.519 worst recall (at matchup_gain 2.0) |
+| Goals/match, balanced | ✅ 2.68–2.93 (band 2.3–3.1, real 2.49) |
+| Shots/team | ❌ ~8 (band 9–15, real 12.19) |
+| xG/shot | ❌ ~0.17 (band 0.08–0.13, real 0.099) |
+| Goals/match, all tactics | ❌ 4.45 (was 15.0; band 2.3–3.1) |
+| Non-transitive cycle | ❌ 0 significant cycles; transitivity 0.432–0.49 (was 0.90) |
+| Throughput | 🟡 256 matches/min at 128 envs (target 300) |
+| Looks like football | ❌ ball-swarming visible in `figures/snapshots.png` |
 
-**The two open problems, with diagnoses:**
+**The central difficulty.** Three properties pull against one another and no
+setting has yet satisfied all three at once:
 
-1. **Calibration holds only near the centre of the action space.** Calibrating the
-   default 4-4-2 matchup certifies one point of 810. Sweeping against *random*
-   tactic pairs (now the default in `pitchsim.calibrate`) exposed goals/match of
-   8+ at the extremes. Best space-wide loss so far is 0.63.
-2. **No rock-paper-scissors cycle.** The physics gives a strictly transitive order
-   tracking block height. A designed, skew-symmetric `matchup_edge` (which the
-   plan sanctions) is in place and cuts transitivity 0.90 → 0.68, but the last
-   obstruction is `low_block_541` = *(low, contain, patient)* — a side that parks
-   the bus **and** passes sideways, so Possession beats it by +24 goals. Real low
-   blocks counter; making it `(low, contain, direct)` is the next thing to try.
+* *realism* wants tactics to behave similarly and sensibly;
+* *separability* wants them to look clearly different;
+* *non-transitivity* wants them to beat each other in a cycle.
+
+`matchup_gain` illustrates it exactly: at 2.0 separability passes but no
+significant cycle exists; at 3.2 four significant cycles appear but separability
+falls to 0.40.
+
+**Two mechanisms found, both real:**
+
+* `shape_follow` — how far a team's shape slides toward the ball — is the dominant
+  driver of how much stronger an aggressive tactic is than a balanced one. Cutting
+  it 0.55 → 0.40 reduced the extreme/balanced goal ratio from 3.3× to 1.7× and the
+  joint calibration loss from 6.00 to 0.57. Below ~0.30 the balanced match collapses,
+  so it is a genuine optimum rather than a monotone knob.
+* The designed matchup term must not touch anything the belief filter observes.
+  Routing it through the tackle rate corrupted PPDA; routing it through xG corrupted
+  `xg_for`/`xg_against`. It now applies to shot *conversion*, leaving the recorded
+  xG honest — which also cut tactic-space goals from 9.06 to 4.45.
+
+**A methodological correction.** Cycle detection originally used a bare sign test,
+which reported three cycles at 30 matches per pairing and none at 40 — every one of
+them resting on a High-press vs Direct edge worth +0.47 goals, well inside the noise.
+`find_cycles` now requires each edge to clear two standard errors. Without that,
+the non-transitivity result could have been written up on sampling noise.
 
 **Baselines run (120 matches, bootstrap CIs) — ranking is not yet sane:**
 

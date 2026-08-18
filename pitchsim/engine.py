@@ -590,9 +590,15 @@ class BatchedEngine:
         # double-counted and inflated goals/match to 5.4 across the tactic space,
         # while pushing the sweep to a physically absurd 28 tackles/second to
         # compensate.
-        shot_xg = np.clip(
-            self._expected_goals(distance, angle, blockers)
-            * (1.0 + self.matchup_gain * edge), 1e-4, 0.95)
+        # Honest chance quality: NOT scaled by the tactical matchup. `xg_for` and
+        # `xg_against` are two of the belief filter's nine observable features, so
+        # scaling xG here leaks the matchup into the very signal used to identify
+        # the opponent — the same mistake as routing it through the tackle rate
+        # and PPDA. At gain 3.2 it drove Direct 3-5-2's recall down to 0.40.
+        # The matchup is applied to CONVERSION instead (see `_execute`), which
+        # moves the payoff matrix without touching anything observable.
+        shot_xg = self._expected_goals(distance, angle, blockers)
+        shot_edge = edge
         # Shooting is terminal and EPV is on the xG scale, so the two compare
         # directly. The penalty is the cost of surrendering possession on a miss.
         scores[:, OPT_SHOT] = shot_xg - self.shot_cost
@@ -684,7 +690,7 @@ class BatchedEngine:
         choice = np.clip(choice, 0, N_OPTIONS - 1)
 
         through = {"target": target, "runner": runner,
-                   "success": wins_race * lane_clear}
+                   "success": wins_race * lane_clear, "edge": shot_edge}
         self._execute(idx, choice, control, shot_xg, own, carrier_pos, through)
         self.next_decision[idx] = self.t[idx] + self.rng.uniform(*self.decision_window, size=m)
 
@@ -734,9 +740,14 @@ class BatchedEngine:
             side = own[is_shot]
             xg = shot_xg[is_shot]
             self.counters.shots[match, side] += 1
-            self.counters.xg[match, side] += xg
+            self.counters.xg[match, side] += xg          # raw, observable
 
-            scored = self.rng.random(match.size) < xg
+            # Conversion is where the tactical matchup pays out. A favourable
+            # matchup converts the same chance more often; the recorded xG is
+            # untouched, so the belief filter's view stays clean.
+            convert = np.clip(xg * (1.0 + self.matchup_gain * through["edge"][is_shot]),
+                              1e-4, 0.95)
+            scored = self.rng.random(match.size) < convert
             if scored.any():
                 goal_match, goal_side = match[scored], side[scored]
                 self.score[goal_match, goal_side] += 1
