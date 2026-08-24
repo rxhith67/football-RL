@@ -92,3 +92,35 @@ class SMDPMaskablePPO(MaskablePPO):
             gamma_per_minute=self.gamma_per_minute,
             env=self.env,
         )
+
+    def set_discounting(self, smdp: bool) -> None:
+        """Apply the SMDP/flat choice to an ALREADY-CONSTRUCTED model.
+
+        `load()` restores `smdp` from the checkpoint's saved attributes, so a
+        curriculum stage that asks for flat-gamma while initialising from a
+        gamma^tau parent would otherwise inherit the parent's setting in
+        silence: same discount, same gradients, a bit-identical policy saved
+        under a tag claiming it was the ablation. An ablation that cannot
+        differ from its control is worse than no ablation, so the switch is
+        applied explicitly here rather than trusted to `__init__`.
+
+        `_setup_model` cannot be reused for this — it rebuilds the policy and
+        would discard the loaded weights.
+        """
+        if smdp == self.smdp:
+            return
+        self.smdp = smdp
+        common = dict(
+            observation_space=self.observation_space,
+            action_space=self.action_space,
+            device=self.device,
+            gamma=self.gamma,
+            gae_lambda=self.gae_lambda,
+            n_envs=self.n_envs,
+        )
+        if smdp:
+            self.rollout_buffer = SMDPMaskableRolloutBuffer(
+                self.n_steps, gamma_per_minute=self.gamma_per_minute,
+                env=self.env, **common)
+        else:
+            self.rollout_buffer = MaskableRolloutBuffer(self.n_steps, **common)
