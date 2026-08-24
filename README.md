@@ -64,23 +64,71 @@ the gate rejects stale results.
 | Phase | Focus | Gate | Status |
 |---|---|---|---|
 | **0** | Foundations & de-risking | xG AUC > 0.75 · stub live | ✅ **PASSED** |
-| **1** | Environment | realism, speed, separability, cycles | 🟡 numeric checks pass; visual sign-off pending |
-| **2** | Learning | PPO > random, non-overlapping CIs | 🟡 curriculum and PFSP league implemented; training evidence pending |
-| **3** | Science | EGTA, ablations, exploitability | 🟡 Nash/α-Rank implemented; trained-policy study pending |
-| **4** | Consolidation | offline demo and rehearsal | 🟡 console and current animation built; offline rehearsal pending |
+| **1** | Environment | realism, speed, separability, cycles | ✅ **PASSED** (visual signed off 22 Aug) |
+| **2** | Learning | PPO > random, non-overlapping CIs | 🔴 2 of 4 checks failing at current budgets |
+| **3** | Science | EGTA, ablations, exploitability | 🟡 3 of 4 measured, all at reduced budget |
+| **4** | Consolidation | offline demo and rehearsal | 🟡 console and animation built; offline rehearsal pending |
 
-### Gate 1 detail (20 Aug)
+> **Every Phase 2–3 number below comes from smoke-scale runs**, roughly 25×
+> under the budgets declared in `config/train.yaml` (2k/20k/15k macro-steps
+> against a declared 150k/400k/600k, with 20–40 evaluation matches against a
+> declared 500 × 5 seeds). At this size the gates flip between runs. The
+> pipeline is proven end to end; the science is not yet run.
+
+### Gate 1 detail (22 Aug) — PASSED
 
 | Condition | Current fingerprinted evidence |
 |---|---|
 | Calibration | ✅ 3.062 goals/match; 13.865 shots/team; 0.121 xG/shot |
-| Throughput | ✅ 98 matches/min at 48 environments; sustained floor 60 |
-| Archetype separability | ✅ 0.918 accuracy; 0.816 worst recall; 1,080 windows |
+| Throughput | ✅ 420+ matches/min at 48 environments; sustained floor 60 |
+| Archetype separability | ✅ 0.927 accuracy; 0.850 worst recall; 2,160 windows |
 | Non-transitive structure | ✅ 3 significant cycles at 32 matches/pairing; transitivity 0.358 |
-| Looks like football | 🟡 regenerated `figures/match_fixed.gif`; human sign-off remains manual |
+| Looks like football | ✅ signed off 22 Aug against the current config fingerprint |
 
-After a football-literate reviewer watches the animation, record the last Gate-1
-check with `python scripts/check_gate.py --approve-visual "Reviewer name"`.
+Sign-off is tied to the simulator fingerprint: any change to the fingerprinted
+code or configuration marks it stale and the animation must be reviewed again
+with `python scripts/check_gate.py --approve-visual "Reviewer name"`.
+
+### Gate 2 detail (22 Aug) — BLOCKED
+
+| Condition | Current evidence |
+|---|---|
+| Belief re-identifies a switch | ✅ mean 1.21 epochs, 86% recovered, 649 true switches |
+| Console renders a real replay | ✅ `/simulate_policy` returns a schema-valid replay from a trained checkpoint |
+| PPO beats random-tactic | 🔴 1.70 ppm [1.325, 2.075] vs random 1.349 [1.266, 1.490] — CIs overlap |
+| Elo rises across generations | 🔴 1441 → 1432 → 1627; generation 1 fell below its parent |
+
+Both failures are sample-size effects, not broken mechanics: an earlier run of
+the same code gave 2.225 ppm and a monotone 1452 → 1524 → 1524. Note also that
+the two Stage-2 entries are seed **siblings** of one Stage-1 parent rather than
+successive generations, so this check does not yet demonstrate generational
+improvement even when it passes.
+
+### Gate 3 detail (22 Aug)
+
+| Condition | Current evidence |
+|---|---|
+| EGTA payoff + Nash/α-Rank | ✅ Nash peak High-press 4-3-3 (0.44); α-Rank peak the same (0.38) |
+| Exploitability probe | 🟡 ran, but at 15k steps × 1 seed × 30 matches, not the declared 200k × 3 × 500 |
+| All ablations run | 🔴 belief ordering is backwards: blind 2.00 > bayesian 1.80 > oracle 1.57 |
+| Feature freeze 15 Oct | ⏳ pending |
+
+The belief ordering is the headline concern. The oracle should lead; it trails
+blind by 0.43 ppm. At 30 matches the intervals overlap heavily, so this is most
+likely noise plus undertraining rather than a real finding — but Pillar 1 has no
+support until a full-budget run says otherwise. `analysis/ablations.py` now
+refuses to report a recovery percentage when the oracle gap is non-positive,
+because dividing two negatives yields a healthy-looking number for a result
+pointing the wrong way.
+
+The γ^τ versus flat-γ comparison is valid again as of 22 Aug (1.80 vs 2.03 ppm).
+It had been silently comparing γ^τ against itself: `load()` restored `smdp` from
+the parent checkpoint, so the ablation trained a bit-identical policy under a tag
+claiming otherwise. Fixed by `SMDPMaskablePPO.set_discounting`, with a regression
+test.
+
+Two declared ablations remain unimplemented and are reported as such rather than
+skipped quietly: a recurrent belief mode and the action-masking ablation.
 
 The fixes behind these results are structural: press closing speed no longer
 changes every player's permanent running speed; PPDA counts pressure actions in
@@ -88,9 +136,21 @@ the correct pitch zone; the hidden matchup affects conversion rather than belief
 observables; defensive-line height is now measured; and batched evidence jobs
 checkpoint and resume under local CPU limits.
 
-The 17 Aug baseline file is marked stale because it predates these mechanics.
-Gate 2 requires a fresh multi-seed baseline and PPO evaluation; no old ranking is
-presented as current evidence.
+### Known evidence gaps
+
+- **Baselines are fingerprint-stale.** `data/eval_baselines.json` was measured
+  under learning fingerprint `998f31e0…`, which the current stack no longer
+  matches. `ppo_vs_random_report` does not check that fingerprint, so Gate 2's
+  PPO-versus-random comparison currently spans two different learning stacks.
+  Only the `random` cell has been run; `static`, `greedy` and `tabular_q` have
+  not.
+- **Checkpoint lineage is strict, and rightly so.** Editing any fingerprinted
+  file invalidates every checkpoint for further training, which forces a
+  curriculum refresh. Freeze the code before starting long runs.
+- **No mid-stage resume.** A stage is one uninterruptible `learn()` call, so a
+  400k-step Stage 1 cannot be split across sessions or survive a sleeping
+  laptop.
+- **Two ablations unimplemented**: recurrent belief mode, action masking.
 
 ### Gate 0 evidence (15 Aug 2026)
 
