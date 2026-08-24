@@ -1,0 +1,163 @@
+{
+  "config_fingerprint": "dd35252b674180c3",
+  "steps": 15000,
+  "n_matches": 30,
+  "seed": 0,
+  "parent": "stage0_bayesian_smdp_seed0",
+  "implemented": [
+    "belief",
+    "gamma"
+  ],
+  "not_implemented": [
+    "recurrent belief mode",
+    "masking",
+    "shaping-w sweep"
+  ],
+  "results": {
+    "belief": {
+      "blind": {
+        "n_matches": 30,
+        "points_per_match": 2.0,
+        "ppm_ci": [
+          1.6,
+          2.3674999999999877
+        ],
+        "win_rate": 0.5333333333333333,
+        "draw_rate": 0.4,
+        "loss_rate": 0.06666666666666667,
+        "goal_diff": 0.8666666666666667,
+        "goal_diff_ci": [
+          0.3333333333333333,
+          1.4666666666666666
+        ],
+        "xg_diff": 2.1644511446733614,
+        "comeback_rate": 0.5,
+        "comeback_ci": [
+          0.0,
+          1.0
+        ],
+        "n_trailing_at_half": 2,
+        "belief_accuracy": 0.4,
+        "n_switches": 90,
+        "n_adapted": 0,
+        "adaptation_success_rate": 0.0
+      },
+      "bayesian": {
+        "n_matches": 30,
+        "points_per_match": 1.8,
+        "ppm_ci": [
+          1.3666666666666667,
+          2.2333333333333334
+        ],
+        "win_rate": 0.5,
+        "draw_rate": 0.3,
+        "loss_rate": 0.2,
+        "goal_diff": 0.9666666666666667,
+        "goal_diff_ci": [
+          0.3,
+          1.7
+        ],
+        "xg_diff": 2.6776468876458788,
+        "comeback_rate": 0.0,
+        "comeback_ci": [
+          0.0,
+          0.0
+        ],
+        "n_trailing_at_half": 3,
+        "belief_accuracy": 0.8666666666666667,
+        "adaptation_epochs": 1.308641975308642,
+        "n_switches": 94,
+        "n_adapted": 81,
+        "adaptation_success_rate": 0.8617021276595744
+      },
+      "oracle": {
+        "n_matches": 30,
+        "points_per_match": 1.5666666666666667,
+        "ppm_ci": [
+          1.1333333333333333,
+          2.0
+        ],
+        "win_rate": 0.4,
+        "draw_rate": 0.36666666666666664,
+        "loss_rate": 0.23333333333333334,
+        "goal_diff": 0.7,
+        "goal_diff_ci": [
+          0.16666666666666666,
+          1.2666666666666666
+        ],
+        "xg_diff": 1.7602743826427938,
+        "comeback_rate": 0.5,
+        "comeback_ci": [
+          0.16666666666666666,
+          0.8333333333333334
+        ],
+        "n_trailing_at_half": 6,
+        "belief_accuracy": 1.0,
+        "n_switches": 105,
+        "n_adapted": 0,
+        "adaptation_success_rate": 0.0
+      }
+    },
+    "gamma": {
+      "gamma_tau": {
+        "n_matches": 30,
+        "points_per_match": 1.8,
+        "ppm_ci": [
+          1.3666666666666667,
+          2.2333333333333334
+        ],
+        "win_rate": 0.5,
+        "draw_rate": 0.3,
+        "loss_rate": 0.2,
+        "goal_diff": 0.9666666666666667,
+        "goal_diff_ci": [
+          0.3,
+          1.7
+        ],
+        "xg_diff": 2.6776468876458788,
+        "comeback_rate": 0.0,
+        "comeback_ci": [
+          0.0,
+          0.0
+        ],
+        "n_trailing_at_half": 3,
+        "belief_accuracy": 0.8666666666666667,
+        "adaptation_epochs": 1.308641975308642,
+        "n_switches": 94,
+        "n_adapted": 81,
+        "adaptation_success_rate": 0.8617021276595744
+      },
+      "flat_gamma": {
+        "n_matches": 30,
+        "points_per_match": 2.033333333333333,
+        "ppm_ci": [
+          1.6,
+          2.466666666666667
+        ],
+        "win_rate": 0.6,
+        "draw_rate": 0.23333333333333334,
+        "loss_rate": 0.16666666666666666,
+        "goal_diff": 0.9333333333333333,
+        "goal_diff_ci": [
+          0.3,
+          1.5333333333333334
+        ],
+        "xg_diff": 1.8945047181210508,
+        "comeback_rate": 0.5,
+        "comeback_ci": [
+          0.0,
+          1.0
+        ],
+        "n_trailing_at_half": 4,
+        "belief_accuracy": 0.9333333333333333,
+        "adaptation_epochs": 1.205128205128205,
+        "n_switches": 89,
+        "n_adapted": 78,
+        "adaptation_success_rate": 0.8764044943820225
+      }
+    },
+    "oracle_gap": -0.43333333333333335,
+    "belief_recovers": null,
+    "ordering_as_expected": false
+  }
+}

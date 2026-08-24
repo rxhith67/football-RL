@@ -95,13 +95,12 @@ class VecCoachEnv(VecEnv):
         self.subs_cfg = ctrl.load_config()[0]["substitutions"]
 
         obs_dim = int(self.train_cfg["observation"]["total"])
+        self.render_mode = None
         super().__init__(
             num_envs=n_envs,
             observation_space=spaces.Box(-5.0, 5.0, (obs_dim,), dtype=np.float32),
             action_space=spaces.MultiDiscrete(list(HEAD_SIZES)),
         )
-        self.render_mode = None
-
         self.filter: BeliefFilter | None = None
         if belief_mode == "bayesian":
             self.filter = BeliefFilter.load()
@@ -125,7 +124,11 @@ class VecCoachEnv(VecEnv):
 
         tactics = np.empty((self.num_envs, 2, 5), dtype=np.int64)
         tactics[:, HOME] = Tactic.from_names().as_array()
-        tactics[:, AWAY] = base[self.assignment]
+        if self.opponent_mode == "fixed":
+            tactics[:, AWAY] = Tactic.from_names().as_array()
+            self.assignment[:] = N_ARCHETYPES - 1  # balanced_442
+        else:
+            tactics[:, AWAY] = base[self.assignment]
         self.engine.reset(seed=seed, tactics=tactics)
 
         self.belief = (self.filter.reset(self.num_envs) if self.filter is not None
@@ -139,6 +142,10 @@ class VecCoachEnv(VecEnv):
         self.tau_log: list[np.ndarray] = getattr(self, 'tau_log', [])
         self._episode_reward = np.zeros(self.num_envs)
         self._half_score = np.zeros((self.num_envs, 2), dtype=np.int64)
+        self._awaiting_adaptation = np.zeros(self.num_envs, dtype=bool)
+        self._adaptation_switch_epoch = np.full(self.num_envs, -1, dtype=np.int64)
+        self._adaptation_samples: list[list[int]] = [[] for _ in range(self.num_envs)]
+        self._n_true_switches = np.zeros(self.num_envs, dtype=np.int64)
         return self._observe()
 
     # ------------------------------------------------------------------
@@ -168,6 +175,11 @@ class VecCoachEnv(VecEnv):
         score_diff_away = self.engine.score[:, AWAY] - self.engine.score[:, HOME]
         if self.opponent_mode == "archetype":
             tactics[:, AWAY] = self.coaches.decide(minute, score_diff_away, self.rng)
+            switched = self.coaches.regime_switched_now
+            if switched.any():
+                self._awaiting_adaptation[switched] = True
+                self._adaptation_switch_epoch[switched] = self.coaches.last_switch_epoch[switched]
+                self._n_true_switches[switched] += 1
         elif self.opponent_policy is not None:
             tactics[:, AWAY] = self.opponent_policy(self._observe(side=AWAY))
 
@@ -176,8 +188,17 @@ class VecCoachEnv(VecEnv):
         # --- advance to the next decision epoch (or an early trigger) ---
         start = self.engine.minutes().copy()
         target = np.minimum(start + self.epoch_minutes, self.match_minutes)
-        self.engine.run_until(float(target.max()) * 60.0, stop_on_goal=True)
+        # Individual goal triggers stop only their own match. Once any row enters
+        # the final interval, finish every row together so VecEnv emits terminal
+        # reward exactly once rather than repeatedly rewarding early finishers.
+        final_interval = bool((target >= self.match_minutes).any())
+        if final_interval:
+            target[:] = self.match_minutes
+        self.engine.run_until(target * 60.0, stop_on_goal=not final_interval)
         tau = np.maximum(self.engine.minutes() - start, 1e-3)
+        crossed_half = (start < 45.0) & (self.engine.minutes() >= 45.0)
+        if crossed_half.any():
+            self._half_score[crossed_half] = self.engine.score[crossed_half]
 
         self._epoch += 1
         done = self.engine.done()
@@ -201,6 +222,16 @@ class VecCoachEnv(VecEnv):
 
         self.tau_log.append(tau.copy())
         obs = self._observe()
+        if self.opponent_mode == "archetype" and self.filter is not None:
+            recovered = (self._awaiting_adaptation
+                         & (np.argmax(self.belief, axis=1)
+                            == self.coaches.current_assignment))
+            for i in np.flatnonzero(recovered):
+                # A switch at the start of this decision interval followed by a
+                # correct MAP after its observation is one-epoch adaptation.
+                latency = self._epoch - self._adaptation_switch_epoch[i] + 1
+                self._adaptation_samples[i].append(int(max(latency, 1)))
+            self._awaiting_adaptation[recovered] = False
         infos = [{"tau": float(tau[i]), "epoch": self._epoch} for i in range(self.num_envs)]
 
         if done.all():
@@ -211,8 +242,15 @@ class VecCoachEnv(VecEnv):
                     "score": (int(self.engine.score[i, HOME]),
                               int(self.engine.score[i, AWAY])),
                     "points": 3 if diff[i] > 0 else (1 if diff[i] == 0 else 0),
+                    "xg_diff": float(self.engine.counters.xg[i, HOME]
+                                     - self.engine.counters.xg[i, AWAY]),
+                    "trailing_at_half": bool(
+                        self._half_score[i, HOME] < self._half_score[i, AWAY]),
                     "belief_correct": bool(
-                        np.argmax(self.belief[i]) == self.assignment[i]),
+                        np.argmax(self.belief[i])
+                        == self.coaches.current_assignment[i]),
+                    "adaptation_epochs": list(self._adaptation_samples[i]),
+                    "n_true_switches": int(self._n_true_switches[i]),
                 }
             obs = self.reset()
 
@@ -250,7 +288,9 @@ class VecCoachEnv(VecEnv):
         if side == HOME and self.filter is not None:
             self.belief = self.filter.update(stats[:, AWAY])
         elif side == HOME and self.belief_mode == "oracle":
-            self.belief = np.eye(N_ARCHETYPES)[self.assignment]
+            target = (self.coaches.current_assignment
+                      if self.opponent_mode == "archetype" else self.assignment)
+            self.belief = np.eye(N_ARCHETYPES)[target]
         elif side == HOME and self.belief_mode == "blind":
             self.belief = np.full((self.num_envs, N_ARCHETYPES), 1.0 / N_ARCHETYPES)
 
@@ -270,7 +310,7 @@ class VecCoachEnv(VecEnv):
             (self.engine.yellow_cards[:, side] / 5.0)[:, None],
         ], axis=1)
 
-        scale = np.array([1.0, 8.0, 8.0, 1.5, 1.5, 1.0, 30.0, 1.0, 40.0])
+        scale = np.array([1.0, 8.0, 1.0, 1.5, 1.5, 1.0, 30.0, 1.0, 40.0])
         own_form = np.clip(stats[:, side] / scale, 0.0, 1.5)
         opp_form = np.clip(stats[:, other] / scale, 0.0, 1.5)
 

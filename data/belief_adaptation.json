@@ -1,0 +1,16 @@
+{
+  "evidence_fingerprint": "85bc7d9573a38255",
+  "n_matches": 240,
+  "n_switches": 649,
+  "n_adapted": 558,
+  "adaptation_success_rate": 0.8597842835130971,
+  "mean_adaptation_epochs": 1.2096774193548387,
+  "median_adaptation_epochs": 1.0,
+  "p90_adaptation_epochs": 2.0,
+  "criteria": {
+    "max_mean_epochs": 3.0,
+    "min_success_rate": 0.8,
+    "min_switches": 100
+  },
+  "passed": true
+}

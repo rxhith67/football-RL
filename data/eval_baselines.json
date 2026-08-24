@@ -1,98 +1,160 @@
 {
-  "random": {
-    "n_matches": 120,
-    "points_per_match": 1.2166666666666666,
-    "ppm_ci": [
-      0.9916666666666667,
-      1.4416666666666667
-    ],
-    "win_rate": 0.30833333333333335,
-    "draw_rate": 0.2916666666666667,
-    "loss_rate": 0.4,
-    "goal_diff": -0.7333333333333333,
-    "goal_diff_ci": [
-      -1.2333333333333334,
-      -0.26666666666666666
-    ],
-    "xg_diff": 0.0,
-    "comeback_rate": NaN,
-    "comeback_ci": [
-      NaN,
-      NaN
-    ],
-    "n_trailing_at_half": 0,
-    "belief_accuracy": 0.21666666666666667
+  "_meta": {
+    "status": "current",
+    "evidence_fingerprint": "998f31e0e69ba55e",
+    "target_matches_per_cell": 500,
+    "completed_seeds": 5
   },
-  "static": {
-    "n_matches": 120,
-    "points_per_match": 0.65,
-    "ppm_ci": [
-      0.5,
-      0.8083333333333333
-    ],
-    "win_rate": 0.08333333333333333,
-    "draw_rate": 0.4,
-    "loss_rate": 0.5166666666666667,
-    "goal_diff": -1.125,
-    "goal_diff_ci": [
-      -1.4333333333333333,
-      -0.8331250000000031
-    ],
-    "xg_diff": 0.0,
-    "comeback_rate": NaN,
-    "comeback_ci": [
-      NaN,
-      NaN
-    ],
-    "n_trailing_at_half": 0,
-    "belief_accuracy": 0.30833333333333335
-  },
-  "greedy": {
-    "n_matches": 120,
-    "points_per_match": 1.025,
-    "ppm_ci": [
-      0.925,
-      1.1416666666666666
-    ],
-    "win_rate": 0.06666666666666667,
-    "draw_rate": 0.825,
-    "loss_rate": 0.10833333333333334,
-    "goal_diff": -0.09166666666666666,
-    "goal_diff_ci": [
-      -0.225,
-      0.03333333333333333
-    ],
-    "xg_diff": 0.0,
-    "comeback_rate": NaN,
-    "comeback_ci": [
-      NaN,
-      NaN
-    ],
-    "n_trailing_at_half": 0,
-    "belief_accuracy": 0.375
-  },
-  "tabular_q": {
-    "n_matches": 120,
-    "points_per_match": 0.5666666666666667,
-    "ppm_ci": [
-      0.425,
-      0.7166666666666667
-    ],
-    "win_rate": 0.06666666666666667,
-    "draw_rate": 0.36666666666666664,
-    "loss_rate": 0.5666666666666667,
-    "goal_diff": -1.2583333333333333,
-    "goal_diff_ci": [
-      -1.625,
-      -0.9166666666666666
-    ],
-    "xg_diff": 0.0,
-    "comeback_rate": NaN,
-    "comeback_ci": [
-      NaN,
-      NaN
-    ],
-    "n_trailing_at_half": 0,
-    "belief_accuracy": 0.25
+  "runs": {
+    "seed_0": {
+      "random": {
+        "n_matches": 500,
+        "points_per_match": 1.368,
+        "ppm_ci": [
+          1.254,
+          1.482
+        ],
+        "win_rate": 0.366,
+        "draw_rate": 0.27,
+        "loss_rate": 0.364,
+        "goal_diff": -0.08,
+        "goal_diff_ci": [
+          -0.25,
+          0.09
+        ],
+        "xg_diff": -0.15522977795677081,
+        "comeback_rate": 0.21052631578947367,
+        "comeback_ci": [
+          0.15204678362573099,
+          0.27485380116959063
+        ],
+        "n_trailing_at_half": 171,
+        "belief_accuracy": 0.858,
+        "adaptation_epochs": 1.1942148760330578,
+        "n_switches": 1410,
+        "n_adapted": 1210,
+        "adaptation_success_rate": 0.8581560283687943
+      }
+    },
+    "seed_1": {
+      "random": {
+        "n_matches": 500,
+        "points_per_match": 1.348,
+        "ppm_ci": [
+          1.238,
+          1.46
+        ],
+        "win_rate": 0.346,
+        "draw_rate": 0.31,
+        "loss_rate": 0.344,
+        "goal_diff": -0.038,
+        "goal_diff_ci": [
+          -0.196,
+          0.118
+        ],
+        "xg_diff": -0.12365080170347058,
+        "comeback_rate": 0.23780487804878048,
+        "comeback_ci": [
+          0.17073170731707318,
+          0.3048780487804878
+        ],
+        "n_trailing_at_half": 164,
+        "belief_accuracy": 0.868,
+        "adaptation_epochs": 1.1673856773080242,
+        "n_switches": 1345,
+        "n_adapted": 1159,
+        "adaptation_success_rate": 0.8617100371747212
+      }
+    },
+    "seed_2": {
+      "random": {
+        "n_matches": 500,
+        "points_per_match": 1.378,
+        "ppm_ci": [
+          1.266,
+          1.49
+        ],
+        "win_rate": 0.366,
+        "draw_rate": 0.28,
+        "loss_rate": 0.354,
+        "goal_diff": -0.094,
+        "goal_diff_ci": [
+          -0.256,
+          0.068
+        ],
+        "xg_diff": -0.32734687873887336,
+        "comeback_rate": 0.21764705882352942,
+        "comeback_ci": [
+          0.1588235294117647,
+          0.2823529411764706
+        ],
+        "n_trailing_at_half": 170,
+        "belief_accuracy": 0.828,
+        "adaptation_epochs": 1.2219343696027634,
+        "n_switches": 1371,
+        "n_adapted": 1158,
+        "adaptation_success_rate": 0.8446389496717724
+      }
+    },
+    "seed_3": {
+      "random": {
+        "n_matches": 500,
+        "points_per_match": 1.364,
+        "ppm_ci": [
+          1.2519500000000003,
+          1.4720499999999992
+        ],
+        "win_rate": 0.356,
+        "draw_rate": 0.296,
+        "loss_rate": 0.348,
+        "goal_diff": -0.076,
+        "goal_diff_ci": [
+          -0.25,
+          0.088
+        ],
+        "xg_diff": -0.3319525208549576,
+        "comeback_rate": 0.28160919540229884,
+        "comeback_ci": [
+          0.21839080459770116,
+          0.3505747126436782
+        ],
+        "n_trailing_at_half": 174,
+        "belief_accuracy": 0.866,
+        "adaptation_epochs": 1.154046997389034,
+        "n_switches": 1334,
+        "n_adapted": 1149,
+        "adaptation_success_rate": 0.861319340329835
+      }
+    },
+    "seed_4": {
+      "random": {
+        "n_matches": 500,
+        "points_per_match": 1.288,
+        "ppm_ci": [
+          1.176,
+          1.402
+        ],
+        "win_rate": 0.334,
+        "draw_rate": 0.286,
+        "loss_rate": 0.38,
+        "goal_diff": -0.19,
+        "goal_diff_ci": [
+          -0.348,
+          -0.026
+        ],
+        "xg_diff": -0.2002886434366264,
+        "comeback_rate": 0.27485380116959063,
+        "comeback_ci": [
+          0.21052631578947367,
+          0.34502923976608185
+        ],
+        "n_trailing_at_half": 171,
+        "belief_accuracy": 0.842,
+        "adaptation_epochs": 1.2027610008628127,
+        "n_switches": 1354,
+        "n_adapted": 1159,
+        "adaptation_success_rate": 0.8559822747415067
+      }
+    }
   }
 }

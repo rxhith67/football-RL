@@ -261,7 +261,8 @@ class StubPitchSim(PitchSim):
         return WindowStats(
             possession=float(np.clip(poss + n(0, 0.03), 0.05, 0.95)),
             shots_for=float(shots[0]),
-            shots_against=float(shots[1]),
+            defensive_line_height=float(np.clip(0.40 + 0.07 * style[0]
+                                                 + n(0, 0.015), 0.2, 0.7)),
             xg_for=float(xg[0]),
             xg_against=float(xg[1]),
             field_tilt=float(np.clip(0.5 + 0.16 * (style[0] + style[3]) + n(0, 0.05), 0.02, 0.98)),

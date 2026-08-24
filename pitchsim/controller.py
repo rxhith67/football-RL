@@ -13,6 +13,8 @@ Everything is batched over matches: arrays are shaped (B, 2, 11, ...) for
 
 from __future__ import annotations
 
+import hashlib
+import json
 from functools import lru_cache
 from pathlib import Path
 
@@ -22,6 +24,33 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 PITCH_L, PITCH_W = 105.0, 68.0
 HOME, AWAY = 0, 1
+
+
+def config_fingerprint() -> str:
+    """Stable identity of configuration and code that define simulator evidence."""
+    digest = hashlib.sha256()
+    physics = yaml.safe_load((ROOT / "config" / "pitchsim.yaml").read_text(
+        encoding="utf-8"))
+    # Performance thresholds describe hardware acceptance, not simulator
+    # dynamics. Changing that floor must not invalidate scientific evidence.
+    physics.get("calibration", {}).pop("performance", None)
+    tactics = yaml.safe_load((ROOT / "config" / "tactics.yaml").read_text(
+        encoding="utf-8"))
+    digest.update(json.dumps(physics, sort_keys=True).encode("utf-8"))
+    digest.update(json.dumps(tactics, sort_keys=True).encode("utf-8"))
+    paths = [
+        ROOT / "pitchsim" / "engine.py",
+        ROOT / "pitchsim" / "controller.py",
+        ROOT / "pitchsim" / "types.py",
+        ROOT / "pitchsim" / "pitch_control.py",
+        ROOT / "pitchsim" / "epv.py",
+        ROOT / "analysis" / "separability.py",
+        ROOT / "analysis" / "egta.py",
+    ]
+    for path in paths:
+        digest.update(str(path.relative_to(ROOT)).encode("utf-8"))
+        digest.update(path.read_bytes())
+    return digest.hexdigest()[:16]
 
 
 @lru_cache(maxsize=1)

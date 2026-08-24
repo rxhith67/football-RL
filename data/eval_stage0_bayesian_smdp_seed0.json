@@ -1,0 +1,26 @@
+{
+  "stage0_bayesian_smdp_seed0": {
+    "n_matches": 10,
+    "points_per_match": 2.8,
+    "ppm_ci": [
+      2.4,
+      3.0
+    ],
+    "win_rate": 0.9,
+    "draw_rate": 0.1,
+    "loss_rate": 0.0,
+    "goal_diff": 2.1,
+    "goal_diff_ci": [
+      1.4,
+      2.8
+    ],
+    "xg_diff": 2.711122094357048,
+    "comeback_rate": NaN,
+    "comeback_ci": [
+      NaN,
+      NaN
+    ],
+    "n_trailing_at_half": 0,
+    "belief_accuracy": 0.1
+  }
+}

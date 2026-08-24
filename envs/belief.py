@@ -23,7 +23,7 @@ from pathlib import Path
 
 import numpy as np
 
-from pitchsim.controller import load_config
+from pitchsim.controller import config_fingerprint, load_config
 from pitchsim.types import WindowStats
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -90,6 +90,7 @@ class BeliefFilter:
     def save(self, path: Path = MODEL_PATH) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({
+            "config_fingerprint": config_fingerprint(),
             "means": self.means.tolist(),
             "variances": self.variances.tolist(),
             "n_features": int(self.means.shape[1]),
@@ -109,6 +110,11 @@ class BeliefFilter:
                 f"{path} not found. Run: python -m envs.belief --fit"
             )
         blob = json.loads(path.read_text(encoding="utf-8"))
+        if blob.get("config_fingerprint") != config_fingerprint():
+            raise ValueError(
+                f"{path} was fitted for a different simulator configuration; "
+                "run: python -m analysis.separability"
+            )
         return cls(
             np.array(blob["means"]),
             np.array(blob["variances"]),

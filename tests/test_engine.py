@@ -52,6 +52,22 @@ def test_match_runs_to_full_time(played):
     assert played.done().all()
 
 
+def test_goal_trigger_stops_only_the_match_that_scored(monkeypatch):
+    engine = BatchedEngine(batch=2)
+    engine.reset(seed=0)
+
+    def fake_tick(active):
+        engine.t += engine.dt * active
+        if active[0] and engine.t[0] >= 2.0:
+            engine._goal_flags[0, 0] = 1
+
+    monkeypatch.setattr(engine, "_tick", fake_tick)
+    engine.run_until(np.array([10.0, 10.0]), stop_on_goal=True)
+
+    assert engine.t[0] == pytest.approx(2.0)
+    assert engine.t[1] == pytest.approx(10.0)
+
+
 def test_exactly_one_side_holds_the_ball(played):
     assert set(np.unique(played.possessing)).issubset({0, 1})
     assert played.carrier.min() >= 0 and played.carrier.max() <= 10

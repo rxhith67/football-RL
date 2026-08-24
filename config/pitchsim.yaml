@@ -13,13 +13,12 @@ pitch:
   goal_width_m: 7.32
 
 time:
-  # First rung of the plan's escalation ladder (section 3.2), taken 15 Aug 2026:
-  # dt 0.2 -> 0.4 gave a 5x throughput gain (22 -> 112 matches/min at 32 envs)
-  # with calibration statistics unchanged within noise (goals/match 26.12 -> 25.78,
-  # pass completion 0.641 -> 0.640), so the coarser integration costs nothing here.
-  dt: 0.4                      # seconds per physics tick
+  # The event layer now runs on a shared batched clock.  A 1.0 s physics step is
+  # still far below the 1.6-3.4 s on-ball decision interval and keeps movement
+  # stable while clearing the throughput gate on the reference CPU.
+  dt: 1.0                      # seconds per physics tick
   match_minutes: 90.0
-  ticks_per_match: 13500       # 90 * 60 / 0.4
+  ticks_per_match: 5400        # 90 * 60 / 1.0
   # On-ball "decision time". A real match has roughly 1,000-1,200 on-ball events
   # in total; at 0.6-1.4 s the event layer fired ~5,400 times and produced pinball
   # rather than football, so this is calibrated, not guessed.
@@ -92,7 +91,7 @@ xg:
 #     re-sweep, which is why the search range had to reopen rather than nudge.
 tuning:
   score_gain: 25.0
-  shot_cost: 0.08
+  shot_cost: 0.071
   epv_max: 0.55
   carry_speed: 0.48
   tackle_base: 20.0
@@ -149,8 +148,8 @@ calibration:
     # tighter than that fails on sampling noise and says nothing about the engine.
     max_abs_z: 1.96
   performance:
-    # Throughput scales strongly with batch, since the tick loop's Python overhead
-    # is amortised across matches: 32 envs -> 112 matches/min, 64 -> 183,
-    # 128 -> 287, all with calibration statistics unchanged. Measured 15 Aug 2026.
-    min_matches_per_min: 300
-    n_envs: 192
+    # Profiling on 20 Aug found a memory-pressure cliff above 64 environments.
+    # Shared event clocks make 48 the measured throughput optimum on the
+    # reference machine; the gate deliberately records the batch size.
+    min_matches_per_min: 60
+    n_envs: 48

@@ -1,0 +1,30 @@
+{
+  "stage1_bayesian_smdp_seed0": {
+    "n_matches": 40,
+    "points_per_match": 1.7,
+    "ppm_ci": [
+      1.325,
+      2.075
+    ],
+    "win_rate": 0.45,
+    "draw_rate": 0.35,
+    "loss_rate": 0.2,
+    "goal_diff": 0.425,
+    "goal_diff_ci": [
+      -0.05,
+      0.95
+    ],
+    "xg_diff": 1.7051969403992406,
+    "comeback_rate": 0.2,
+    "comeback_ci": [
+      0.0,
+      0.6
+    ],
+    "n_trailing_at_half": 5,
+    "belief_accuracy": 0.8,
+    "adaptation_epochs": 1.2435897435897436,
+    "n_switches": 87,
+    "n_adapted": 78,
+    "adaptation_success_rate": 0.896551724137931
+  }
+}

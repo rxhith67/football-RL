@@ -1,0 +1,26 @@
+{
+  "stage2_bayesian_smdp_seed2": {
+    "n_matches": 20,
+    "points_per_match": 2.15,
+    "ppm_ci": [
+      1.6,
+      2.65
+    ],
+    "win_rate": 0.65,
+    "draw_rate": 0.2,
+    "loss_rate": 0.15,
+    "goal_diff": 1.75,
+    "goal_diff_ci": [
+      0.8,
+      2.7
+    ],
+    "xg_diff": -0.8020237241121062,
+    "comeback_rate": 0.0,
+    "comeback_ci": [
+      0.0,
+      0.0
+    ],
+    "n_trailing_at_half": 3,
+    "belief_accuracy": 0.15
+  }
+}

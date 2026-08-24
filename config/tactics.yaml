@@ -82,9 +82,9 @@ modifiers:
     # Compressing the block-height effect makes the archetypes roughly equal in
     # raw strength and lets the tactical counters decide, which is the only way
     # a rock-paper-scissors structure can survive.
-    low:        {line_x: 31.0, compactness: 0.84, offside_trap: 0.10}
+    low:        {line_x: 35.0, compactness: 0.84, offside_trap: 0.10}
     mid:        {line_x: 38.0, compactness: 0.72, offside_trap: 0.35}
-    high:       {line_x: 45.0, compactness: 0.62, offside_trap: 0.75}
+    high:       {line_x: 41.0, compactness: 0.62, offside_trap: 0.75}
   press:                     # press trigger radius (m), closing speed multiplier,
                              # stamina drain multiplier, foul rate multiplier
     # Widened 17 Aug 2026. Block height had to be compressed to let a
@@ -98,9 +98,13 @@ modifiers:
     gegenpress: {trigger_radius: 32.0, closing_speed: 1.55, stamina_drain: 2.00, foul_rate: 2.00}
   tempo:                     # softmax temperature and risk weight in the EV score,
                              # plus a bias toward long/direct options
-    patient:    {softmax_temp: 0.25, risk_weight: 2.00, directness: -0.85}
-    balanced:   {softmax_temp: 0.70, risk_weight: 1.00, directness:  0.00}
-    direct:     {softmax_temp: 1.50, risk_weight: 0.40, directness:  0.90}
+    # Temperature and risk alter option selection without changing player
+    # ability.  The former 0.25/0.70/1.50 spread made patient teams pass forever
+    # and direct teams shoot from everywhere, creating a 20x strength gap before
+    # any matchup effect.  Directness retains the observable pass-profile signal.
+    patient:    {softmax_temp: 0.75, risk_weight: 1.40, directness: -0.85}
+    balanced:   {softmax_temp: 0.80, risk_weight: 1.00, directness:  0.00}
+    direct:     {softmax_temp: 1.00, risk_weight: 0.70, directness:  0.90}
 
 # ---------------------------------------------------------------------------
 # Substitution rules (drive the action mask — design note 3.3)
@@ -179,13 +183,13 @@ switching:
   hazard_per_epoch: 0.06       # random drift, independent of match state
   rules:
     - when: {trailing_by_at_least: 1, after_minute: 45}
-      shift: {block_height: high, press: gegenpress, tempo: direct}
+      target: high_press_433
     - when: {leading_by_at_least: 1, after_minute: 70}
-      shift: {block_height: low, press: contain, tempo: patient}
+      target: counter_541
     - when: {trailing_by_at_least: 2, after_minute: 60}
-      shift: {formation: 3-5-2, block_height: high, press: gegenpress, tempo: direct}
+      target: direct_352
     - when: {red_card_against_self: true}
-      shift: {block_height: low, press: contain}
+      target: counter_541
 
 # ---------------------------------------------------------------------------
 # Separability acceptance criteria — a Gate 1 condition (design note 3.2).

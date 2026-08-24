@@ -78,15 +78,28 @@ class ScriptedCoaches:
 
     def __post_init__(self) -> None:
         self.assignment = np.asarray(self.assignment, dtype=np.int64)
-        self._switched = np.zeros(self.assignment.shape, dtype=bool)
-        #: Epoch index at which each match's coach last changed plan. The belief
-        #: filter's adaptation latency is measured against exactly this.
-        self.last_switch_epoch = np.zeros(self.assignment.shape, dtype=np.int64)
+        _, _, base = archetype_table()
+        self._last_tactics = base[self.assignment].copy()
+        self.current_assignment = self.assignment.copy()
+        #: True only on the decision where the realised tactic actually changes.
+        #: Rules remain active for several epochs, so testing the rule predicate
+        #: itself would incorrectly count the same switch over and over.
+        self.switched_now = np.zeros(self.assignment.shape, dtype=bool)
+        #: Alias used by the Gate-2 audit: every realised change is between two
+        #: canonical hidden states, so it is a genuine regime switch.
+        self.regime_switched_now = np.zeros(self.assignment.shape, dtype=bool)
+        #: Epoch index of the most recent persistent regime change. The belief
+        #: filter's adaptation latency is measured against exactly this event.
+        self.last_switch_epoch = np.full(self.assignment.shape, -1, dtype=np.int64)
         self._epoch = 0
 
     def reset(self) -> None:
-        self._switched[:] = False
-        self.last_switch_epoch[:] = 0
+        _, _, base = archetype_table()
+        self._last_tactics = base[self.assignment].copy()
+        self.current_assignment = self.assignment.copy()
+        self.switched_now[:] = False
+        self.regime_switched_now[:] = False
+        self.last_switch_epoch[:] = -1
         self._epoch = 0
 
     def decide(
@@ -124,25 +137,32 @@ class ScriptedCoaches:
 
             if not mask.any():
                 continue
-            for head, value in rule["shift"].items():
-                index, names = _HEAD_LOOKUP[head]
-                tactics[mask, index] = names.index(value)
+            if "target" in rule:
+                keys, _, _ = archetype_table()
+                tactics[mask] = base[keys.index(rule["target"])]
+            else:  # backwards-compatible with older partial-shift configs
+                for head, value in rule["shift"].items():
+                    index, names = _HEAD_LOOKUP[head]
+                    tactics[mask, index] = names.index(value)
             changed |= mask
 
         # Random drift on top of the state-dependent rules, so the filter cannot
         # simply learn the rule table and predict switches deterministically.
         drift = rng.random(len(tactics)) < hazard
         if drift.any():
-            for index, names in (
-                (1, BLOCK_HEIGHTS), (2, PRESS_LEVELS), (3, TEMPOS)
-            ):
-                pick = rng.integers(0, len(names), size=len(tactics))
-                tactics[drift, index] = pick[drift]
+            pick = rng.integers(0, N_ARCHETYPES, size=len(tactics))
+            tactics[drift] = base[pick[drift]]
             changed |= drift
 
-        newly = changed & ~self._switched
-        self.last_switch_epoch[newly] = self._epoch
-        self._switched |= changed
+        # Every generated tactic is now canonical, so the true latent state is
+        # unambiguous and directly auditable by the K-way belief filter.
+        matches = np.all(tactics[:, None, :4] == base[None, :, :4], axis=2)
+        current = np.argmax(matches, axis=1)
+        self.switched_now = np.any(tactics != self._last_tactics, axis=1)
+        self.regime_switched_now = self.switched_now.copy()
+        self.last_switch_epoch[self.switched_now] = self._epoch
+        self.current_assignment = current
+        self._last_tactics = tactics.copy()
         return tactics
 
 

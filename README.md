@@ -57,77 +57,40 @@ engine lands it drops in behind an unchanged interface.
 
 ## Phase status
 
-Phases are gated by **evidence**, not dates. Full detail in §6 of the plan.
+Phases are gated by **evidence**, not dates. Full detail is in section 6 of the
+plan. Evidence files carry a fingerprint of the simulator code and configuration;
+the gate rejects stale results.
 
 | Phase | Focus | Gate | Status |
 |---|---|---|---|
-| **0** | Foundations & de-risking | xG AUC > 0.75 · stub live | ✅ **PASSED** (15 Aug) |
-| **1** | Environment | **the one real go/no-go** (4 conditions) | 🟡 2 of 4 — see below |
-| **2** | Learning | PPO > random, non-overlapping CIs | 🟡 pipeline built & runs |
-| **3** | Science (EGTA, ablations) | **feature freeze 15 Oct** | 🟡 harnesses built |
-| **4** | Consolidation | demo runs offline, cable pulled | 🟡 console built |
+| **0** | Foundations & de-risking | xG AUC > 0.75 · stub live | ✅ **PASSED** |
+| **1** | Environment | realism, speed, separability, cycles | 🟡 numeric checks pass; visual sign-off pending |
+| **2** | Learning | PPO > random, non-overlapping CIs | 🟡 curriculum and PFSP league implemented; training evidence pending |
+| **3** | Science | EGTA, ablations, exploitability | 🟡 Nash/α-Rank implemented; trained-policy study pending |
+| **4** | Consolidation | offline demo and rehearsal | 🟡 console and current animation built; offline rehearsal pending |
 
-### Gate 1 detail (18 Aug)
+### Gate 1 detail (20 Aug)
 
-| Condition | State |
+| Condition | Current fingerprinted evidence |
 |---|---|
-| Archetype separability | ✅ 0.719 accuracy, 0.519 worst recall (at matchup_gain 2.0) |
-| Goals/match, balanced | ✅ 2.68–2.93 (band 2.3–3.1, real 2.49) |
-| Shots/team | ❌ ~8 (band 9–15, real 12.19) |
-| xG/shot | ❌ ~0.17 (band 0.08–0.13, real 0.099) |
-| Goals/match, all tactics | ❌ 4.45 (was 15.0; band 2.3–3.1) |
-| Non-transitive cycle | ❌ 0 significant cycles; transitivity 0.432–0.49 (was 0.90) |
-| Throughput | 🟡 256 matches/min at 128 envs (target 300) |
-| Looks like football | ❌ ball-swarming visible in `figures/snapshots.png` |
+| Calibration | ✅ 3.062 goals/match; 13.865 shots/team; 0.121 xG/shot |
+| Throughput | ✅ 98 matches/min at 48 environments; sustained floor 60 |
+| Archetype separability | ✅ 0.918 accuracy; 0.816 worst recall; 1,080 windows |
+| Non-transitive structure | ✅ 3 significant cycles at 32 matches/pairing; transitivity 0.358 |
+| Looks like football | 🟡 regenerated `figures/match_fixed.gif`; human sign-off remains manual |
 
-**The central difficulty.** Three properties pull against one another and no
-setting has yet satisfied all three at once:
+After a football-literate reviewer watches the animation, record the last Gate-1
+check with `python scripts/check_gate.py --approve-visual "Reviewer name"`.
 
-* *realism* wants tactics to behave similarly and sensibly;
-* *separability* wants them to look clearly different;
-* *non-transitivity* wants them to beat each other in a cycle.
+The fixes behind these results are structural: press closing speed no longer
+changes every player's permanent running speed; PPDA counts pressure actions in
+the correct pitch zone; the hidden matchup affects conversion rather than belief
+observables; defensive-line height is now measured; and batched evidence jobs
+checkpoint and resume under local CPU limits.
 
-`matchup_gain` illustrates it exactly: at 2.0 separability passes but no
-significant cycle exists; at 3.2 four significant cycles appear but separability
-falls to 0.40.
-
-**Two mechanisms found, both real:**
-
-* `shape_follow` — how far a team's shape slides toward the ball — is the dominant
-  driver of how much stronger an aggressive tactic is than a balanced one. Cutting
-  it 0.55 → 0.40 reduced the extreme/balanced goal ratio from 3.3× to 1.7× and the
-  joint calibration loss from 6.00 to 0.57. Below ~0.30 the balanced match collapses,
-  so it is a genuine optimum rather than a monotone knob.
-* The designed matchup term must not touch anything the belief filter observes.
-  Routing it through the tackle rate corrupted PPDA; routing it through xG corrupted
-  `xg_for`/`xg_against`. It now applies to shot *conversion*, leaving the recorded
-  xG honest — which also cut tactic-space goals from 9.06 to 4.45.
-
-**A methodological correction.** Cycle detection originally used a bare sign test,
-which reported three cycles at 30 matches per pairing and none at 40 — every one of
-them resting on a High-press vs Direct edge worth +0.47 goals, well inside the noise.
-`find_cycles` now requires each edge to clear two standard errors. Without that,
-the non-transitivity result could have been written up on sampling noise.
-
-**Baselines run (120 matches, bootstrap CIs) — ranking is not yet sane:**
-
-| Coach | Points/match | 95% CI | W/D/L |
-|---|---|---|---|
-| random | 1.217 | [0.992, 1.442] | 0.31/0.29/0.40 |
-| greedy | 1.025 | [0.925, 1.142] | 0.07/0.82/0.11 |
-| static | 0.650 | [0.500, 0.808] | 0.08/0.40/0.52 |
-| tabular_q | 0.567 | [0.425, 0.717] | 0.07/0.37/0.57 |
-
-A random coach topping the table is a red flag, not a result: it means constant
-tactic churn beats any committed plan, which follows from the matchup term being
-the dominant signal. design note 6.2 requires "baselines produce a sane ranking"
-before Gate 2, so this is unresolved.
-
-**Gate 1 is the project's only real go/no-go.** All four must hold: a match that
-looks like football; calibration bands met at ≥ 300 matches/min; archetype
-separability ≥ 70% with no archetype below 50% recall; and a non-transitive cycle
-present in the scripted payoff matrix. If the first fails, fall back to Option B
-(§9 of the plan) without debate.
+The 17 Aug baseline file is marked stale because it predates these mechanics.
+Gate 2 requires a fresh multi-seed baseline and PPO evaluation; no old ranking is
+presented as current evidence.
 
 ### Gate 0 evidence (15 Aug 2026)
 

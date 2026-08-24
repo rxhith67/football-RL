@@ -1,0 +1,30 @@
+{
+  "tags": [
+    "stage1_bayesian_smdp_seed0",
+    "stage2_bayesian_smdp_seed1",
+    "stage2_bayesian_smdp_seed2"
+  ],
+  "n_matches_per_pairing": 20,
+  "points_matrix": [
+    [
+      1.5,
+      1.45,
+      0.25
+    ],
+    [
+      1.2,
+      1.5,
+      0.35
+    ],
+    [
+      2.2,
+      2.6,
+      1.5
+    ]
+  ],
+  "ratings": {
+    "stage1_bayesian_smdp_seed0": 1441.2462977170862,
+    "stage2_bayesian_smdp_seed1": 1432.2497827349532,
+    "stage2_bayesian_smdp_seed2": 1626.5039195479608
+  }
+}

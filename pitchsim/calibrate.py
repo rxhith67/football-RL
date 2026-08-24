@@ -147,6 +147,7 @@ def loss(stats: dict[str, float], config: dict) -> float:
 
 def report(config: dict | None = None, batch: int = 32, seed: int = 0) -> tuple[bool, str]:
     """Sim-vs-real table. Returns (all bands met, printable text)."""
+    authoritative = config is None
     config = config or ctrl.load_config()[1]
     stats = simulate(config, batch=batch, seed=seed)
     targets = config["calibration"]["targets"]
@@ -191,7 +192,17 @@ def report(config: dict | None = None, batch: int = 32, seed: int = 0) -> tuple[
         f"{'~1.2':>9}",
         f"{'(context) passes/team':22} {stats['passes_per_team']:9.0f} {'~500':>9}",
     ]
-    return ok and sym_ok, "\n".join(lines)
+    passed = ok and sym_ok
+    if authoritative:
+        RESULTS.parent.mkdir(parents=True, exist_ok=True)
+        RESULTS.write_text(json.dumps({
+            "config_fingerprint": ctrl.config_fingerprint(),
+            "batch": int(batch),
+            "seed": int(seed),
+            "passed": bool(passed),
+            "stats": stats,
+        }, indent=2), encoding="utf-8")
+    return passed, "\n".join(lines)
 
 
 # --------------------------------------------------------------------------
@@ -291,7 +302,9 @@ def sweep(rounds: int = 2, batch: int = 16, seed: int = 0, verbose: bool = True,
 
 
 def calibration_report() -> tuple[bool, str]:
-    ok, text = report()
+    config = ctrl.load_config()[1]
+    audit_batch = int(config["calibration"]["performance"]["n_envs"])
+    ok, text = report(batch=audit_batch)
     summary = [ln for ln in text.splitlines() if "FAIL" in ln]
     return ok, "all bands met" if ok else "; ".join(s.split()[0] for s in summary) + " out of band"
 

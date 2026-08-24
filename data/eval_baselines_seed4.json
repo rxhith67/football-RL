@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "status": "current",
+    "evidence_fingerprint": "998f31e0e69ba55e",
+    "target_matches": 500,
+    "seed": 4
+  },
+  "random": {
+    "n_matches": 500,
+    "points_per_match": 1.288,
+    "ppm_ci": [
+      1.176,
+      1.402
+    ],
+    "win_rate": 0.334,
+    "draw_rate": 0.286,
+    "loss_rate": 0.38,
+    "goal_diff": -0.19,
+    "goal_diff_ci": [
+      -0.348,
+      -0.026
+    ],
+    "xg_diff": -0.2002886434366264,
+    "comeback_rate": 0.27485380116959063,
+    "comeback_ci": [
+      0.21052631578947367,
+      0.34502923976608185
+    ],
+    "n_trailing_at_half": 171,
+    "belief_accuracy": 0.842,
+    "adaptation_epochs": 1.2027610008628127,
+    "n_switches": 1354,
+    "n_adapted": 1159,
+    "adaptation_success_rate": 0.8559822747415067
+  }
+}

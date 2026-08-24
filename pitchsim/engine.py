@@ -188,6 +188,12 @@ class BatchedEngine:
         self.reaction = float(ev["pitch_control"]["reaction_time_s"])
         self.sigma = float(ev["pitch_control"]["sigma_logistic"])
         self.decision_window = tuple(self.cfg["time"]["decision_interval_s"])
+        # Decisions use the calibrated mean interval on deterministic per-match
+        # clocks. They stay aligned during ordinary play but may diverge after an
+        # individual match stops early for a goal-triggered coaching decision.
+        # The clocks are not random: stochastic per-match intervals fragmented
+        # almost every event-layer call and defeated BatchedEngine vectorisation.
+        self.decision_interval = float(np.mean(self.decision_window))
 
         tune = self.cfg.get("tuning", {})
         self.score_gain = float(tune.get("score_gain", 45.0))
@@ -256,7 +262,7 @@ class BatchedEngine:
         self.flight_ok = np.zeros(b, dtype=bool)
 
         self.t = np.zeros(b, dtype=np.float64)
-        self.next_decision = self.rng.uniform(*self.decision_window, size=b)
+        self.next_decision_time = np.full(b, self.decision_interval, dtype=np.float64)
         self.score = np.zeros((b, 2), dtype=np.int64)
         self.counters = _Counters.zeros(b)
         self._window_mark = self.counters.snapshot()
@@ -283,7 +289,6 @@ class BatchedEngine:
         self._heads = (form, self.tactics[:, :, 1],
                        self.tactics[:, :, 2], self.tactics[:, :, 3])
         self._slots = ctrl.base_slots(form)
-        self._closing = ctrl.modifier_tables()["closing_speed"][self.tactics[:, :, 2]]
 
     def attach_recorder(self, index: int, builder: ReplayBuilder) -> None:
         self._recorders[index] = builder
@@ -292,24 +297,32 @@ class BatchedEngine:
     # The tick loop
     # ------------------------------------------------------------------
 
-    def run_until(self, target_seconds: float, stop_on_goal: bool = True) -> np.ndarray:
-        """Advance every match to `target_seconds`, or until a goal is scored.
+    def run_until(self, target_seconds: float | np.ndarray,
+                  stop_on_goal: bool = True) -> np.ndarray:
+        """Advance each match to its target, or its own next goal.
 
         Returns the per-match goal tally accumulated during this call, so the
-        SMDP wrapper can fire its `goal_for` / `goal_against` triggers.
+        SMDP wrapper can fire its `goal_for` / `goal_against` triggers. A goal in
+        one batch row never stops unrelated matches.
         """
         self._goal_flags[:] = 0
+        target = np.asarray(target_seconds, dtype=np.float64)
+        if target.ndim == 0:
+            target = np.full(self.batch, float(target), dtype=np.float64)
+        if target.shape != (self.batch,):
+            raise ValueError(f"target_seconds must be scalar or shape ({self.batch},)")
         # Half-tick tolerance on the bound. `t` accumulates by repeated addition,
         # so it lands a hair under the target and a bare `<` runs one extra tick,
         # overshooting full time by dt and leaving `t` at 5400.4 rather than 5400.
-        limit = min(target_seconds, self.match_seconds) - 0.5 * self.dt
+        limit = np.minimum(target, self.match_seconds) - 0.5 * self.dt
+        stopped = np.zeros(self.batch, dtype=bool)
         while True:
-            active = self.t < limit
+            active = (self.t < limit) & ~stopped
             if not active.any():
                 break
-            if stop_on_goal and self._goal_flags.any():
-                break
             self._tick(active)
+            if stop_on_goal:
+                stopped |= self._goal_flags.any(axis=1)
         return self._goal_flags.copy()
 
     def _tick(self, active: np.ndarray) -> None:
@@ -323,7 +336,13 @@ class BatchedEngine:
                                      form, block, press, tempo, self.shape_follow)
         targets = ctrl.press_targets(targets, self.pos, self.ball, self.possessing,
                                      press, self.collapse_near, self.collapse_mid)
-        closing = np.repeat(self._closing[:, :, None], 11, axis=2).copy()
+        # `closing_speed` is a pressing/tackle modifier, not a permanent team
+        # speed multiplier.  Applying it to all eleven players made contain
+        # teams move at 60% speed and gegenpress teams at 155%, creating both
+        # ball-swarming and a dominant tactic.  Chase targets and tackle rates
+        # already express press intensity; ordinary movement stays attribute-
+        # driven here.
+        closing = np.ones_like(self.max_speed)
         self._drive_carrier(targets, closing)
         self.pos, self.vel = ctrl.step_positions(
             self.pos, self.vel, targets, self.max_speed, self.stamina,
@@ -350,9 +369,22 @@ class BatchedEngine:
 
         # --- on-ball decisions --------------------------------------------------
         self.t += dt * active
-        due = active & held & (self.t >= self.next_decision)
+        # Evaluate the event layer only on the shared decision clock.  A match
+        # whose ball is still in flight waits for the next clock edge; resolving
+        # it immediately on landing fragmented one batched call into hundreds of
+        # tiny calls and cut throughput by an order of magnitude.
+        crossed = active & (self.t + 0.5 * dt >= self.next_decision_time)
+        due = crossed & held
         if due.any():
             self._resolve_decisions(np.flatnonzero(due))
+        if crossed.any():
+            # Usually one interval; the floor also makes this correct if a
+            # caller restores or advances a row across several clock edges.
+            jumps = (np.floor(
+                (self.t[crossed] + 0.5 * dt - self.next_decision_time[crossed])
+                / self.decision_interval
+            ).astype(np.int64) + 1)
+            self.next_decision_time[crossed] += jumps * self.decision_interval
 
         self._record(active)
 
@@ -424,12 +456,22 @@ class BatchedEngine:
                 self.pos[bad, opp] - self.ball[bad][:, None, :], axis=-1
             )
             players[~good] = np.argmin(distance, axis=-1)
-            self.counters.defensive_actions[bad, opp] += 1
 
         self.possessing[idx] = winners
         self.carrier[idx] = players
         self.carrying[idx] = False
         self.counters.passes_completed[idx[good], self.flight_side[idx[good]]] += 1
+
+    def _in_ppda_zone(self, matches: np.ndarray, defending: np.ndarray) -> np.ndarray:
+        """Whether a defensive action belongs in the PPDA denominator.
+
+        PPDA counts actions outside the defending team's deepest 40% of the
+        pitch.  Counting box clearances and low-block tackles made every style
+        saturate at the display floor and erased the press-intensity signal.
+        """
+        ball_x = self.ball[matches, 0]
+        progress = np.where(defending == HOME, ball_x, PITCH_L - ball_x)
+        return progress >= 0.40 * PITCH_L
 
     def _handle_out_of_play(self) -> None:
         """Restart on a touchline or goal-line exit.
@@ -484,7 +526,6 @@ class BatchedEngine:
 
         if won.any():
             taken = idx[won]
-            self.counters.defensive_actions[taken, defending[won]] += 1
             self.possessing[taken] = defending[won]
             self.carrier[taken] = nearest[won]
             self.carrying[taken] = False
@@ -520,12 +561,30 @@ class BatchedEngine:
         risk_weight = mods["risk_weight"][tempo]
         directness = mods["directness"][tempo]
 
+        # PPDA denominator: pressure actions in the attacking 60% of the pitch.
+        # Counting only successful tackles saturated at the same value for every
+        # tactic because close-range duel probabilities are intentionally high.
+        # A pressure is an observable defensive action whether or not it wins the
+        # ball; the tactic's trigger radius therefore produces the signal PPDA is
+        # designed to measure without changing match outcomes.
+        defending_press = self.tactics[idx, opp, 2]
+        pressure_radius = mods["trigger_radius"][defending_press]
+        nearest_pressure = np.min(
+            np.linalg.norm(opp_pos - carrier_pos[:, None, :], axis=-1), axis=-1)
+        pressured = ((nearest_pressure <= pressure_radius)
+                     & self._in_ppda_zone(idx, opp))
+        if pressured.any():
+            self.counters.defensive_actions[idx[pressured], opp[pressured]] += 1
+
         # --- pass options: one per teammate ------------------------------------
         # All eleven candidate receivers in ONE call. Looping in Python here cost
         # more than the rest of the tick combined.
-        # Tactical matchup: a designed rock-paper-scissors term (see `matchup_edge`).
-        # Applied to pass retention and shot quality, so a favourable matchup shows
-        # up as sustained pressure and better chances rather than a free goal.
+        # Tactical matchup: a designed rock-paper-scissors term (see
+        # `matchup_edge`).  It must not alter any belief-filter observable.  In
+        # particular, scaling pass retention here leaks the hidden matchup into
+        # completion, possession and PPDA.  The edge is applied only to shot
+        # conversion in `_execute`; recorded xG and all build-up statistics stay
+        # generated by football mechanics alone.
         edge = matchup_edge(self.tactics[idx, own], self.tactics[idx, opp])
 
         destination_control = control_probability(
@@ -536,9 +595,6 @@ class BatchedEngine:
             carrier_pos, own_pos, opp_pos, opp_vel, opp_speed,
             destination_control, self.pass_speed, self.reaction, self.sigma,
         )
-        control = np.clip(control * (1.0 + self.matchup_gain * edge[:, None]), 0.0, 0.99)
-        destination_control = np.clip(
-            destination_control * (1.0 + self.matchup_gain * edge[:, None]), 0.0, 0.99)
 
         target_epv = epv_mod.lookup(own_pos, attacks_positive[:, None], self.epv_max)
         here_epv = epv_mod.lookup(carrier_pos, attacks_positive, self.epv_max)
@@ -554,7 +610,7 @@ class BatchedEngine:
         turnover_cost = risk_weight[:, None] * (1.0 - control) * (
             0.5 * here_epv[:, None] + 0.02
         )
-        long_ball_bonus = directness[:, None] * (travel / PITCH_L) * 0.02
+        long_ball_bonus = directness[:, None] * (travel / PITCH_L) * 0.05
 
         scores = np.full((m, N_OPTIONS), -np.inf)
         scores[:, OPT_PASS_BASE:OPT_PASS_BASE + N_PASS] = (
@@ -692,7 +748,6 @@ class BatchedEngine:
         through = {"target": target, "runner": runner,
                    "success": wins_race * lane_clear, "edge": shot_edge}
         self._execute(idx, choice, control, shot_xg, own, carrier_pos, through)
-        self.next_decision[idx] = self.t[idx] + self.rng.uniform(*self.decision_window, size=m)
 
     def _expected_goals(self, distance, angle, blockers) -> np.ndarray:
         if self._xg is None:
@@ -745,8 +800,21 @@ class BatchedEngine:
             # Conversion is where the tactical matchup pays out. A favourable
             # matchup converts the same chance more often; the recorded xG is
             # untouched, so the belief filter's view stays clean.
-            convert = np.clip(xg * (1.0 + self.matchup_gain * through["edge"][is_shot]),
-                              1e-4, 0.95)
+            # Use a symmetric additive finishing edge.  A multiplicative edge
+            # could not make a tactical counter matter when its chances were
+            # low-xG (multiplying almost zero remains almost zero), so the raw
+            # physical-strength ordering stayed transitive.  For reversed
+            # tactics the edge changes sign, keeping the pairing centered while
+            # allowing a genuine counter to flip a close matchup.
+            signed_edge = through["edge"][is_shot]
+            polarised = np.abs(signed_edge) > 1e-9
+            # In a polarised matchup, allocate a smaller shared finishing budget
+            # toward the side holding the tactical edge.  This creates a strong
+            # counter without the one-sided clipping that previously inflated
+            # tactic-space scoring above four goals per match.
+            base_conversion = np.where(polarised, 0.60 * xg, xg)
+            conversion_edge = 0.30 * self.matchup_gain * signed_edge
+            convert = np.clip(0.78 * (base_conversion + conversion_edge), 1e-4, 0.95)
             scored = self.rng.random(match.size) < convert
             if scored.any():
                 goal_match, goal_side = match[scored], side[scored]
@@ -780,7 +848,10 @@ class BatchedEngine:
 
             distance = np.linalg.norm(target - carrier_pos[is_through], axis=-1)
             self.counters.passes[match, side] += 1
-            self.counters.pass_distance[match, side] += distance.sum()
+            # Advanced indexing plus a scalar sum gave every selected match the
+            # distance travelled by the whole batch.  Besides being wrong, that
+            # made the belief feature depend on batch size.
+            np.add.at(self.counters.pass_distance, (match, side), distance)
             self.in_flight[match] = True
             self.flight_start[match] = self.t[match]
             self.flight_end[match] = self.t[match] + np.clip(
@@ -874,11 +945,17 @@ class BatchedEngine:
             delta["pass_distance"], np.maximum(delta["passes"], 1.0),
             out=np.full_like(delta["passes"], 18.0), where=delta["passes"] > 0,
         )
+        # Tracking systems estimate line height from the block's resting line,
+        # not from a single frame after defenders have chased the ball.  The
+        # instantaneous back-four mean was dominated by those chases and made a
+        # high possession block indistinguishable from a balanced mid block.
+        block = self.tactics[:, :, 1]
+        defensive_line = ctrl.modifier_tables()["line_x"][block] / PITCH_L
 
         return np.stack([
             possession,
             delta["shots"],
-            delta["shots"][:, ::-1],
+            defensive_line,
             delta["xg"],
             delta["xg"][:, ::-1],
             tilt,

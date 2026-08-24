@@ -20,11 +20,9 @@ from typing import Any
 
 import numpy as np
 
-#: 2 — added `mean_pass_length` to `WindowStats` (design note 3.3 lists a
-#: "pass-length profile" among the observables; it was missing, and without it
-#: a low-block counter side was statistically indistinguishable from a balanced
-#: mid-block one, capping archetype separability at 0.65).
-SCHEMA_VERSION = 2
+#: 3 — replaced redundant shots-against with measured defensive-line height;
+#: the opposite side's shots-for already carries the former signal.
+SCHEMA_VERSION = 3
 
 # --------------------------------------------------------------------------
 # Tactic space — mirrors config/tactics.yaml. MultiDiscrete([5, 3, 3, 3, 6]).
@@ -149,14 +147,14 @@ class Tactic:
 class WindowStats:
     """Rolling observable statistics for one side over one window.
 
-    These eight fields are the belief filter's entire input (design note 3.4)
+    These nine fields are the belief filter's entire input (design note 3.4)
     and half of the observation vector. The opponent's *tactic* is never exposed;
     only this statistical footprint is.
     """
 
     possession: float = 0.5        # share in [0, 1]
     shots_for: float = 0.0         # per window
-    shots_against: float = 0.0
+    defensive_line_height: float = 0.4  # progress from own goal, in [0, 1]
     xg_for: float = 0.0
     xg_against: float = 0.0
     field_tilt: float = 0.5        # share of final-third touches
@@ -168,7 +166,7 @@ class WindowStats:
 
     def as_array(self) -> np.ndarray:
         return np.array(
-            [self.possession, self.shots_for, self.shots_against, self.xg_for,
+            [self.possession, self.shots_for, self.defensive_line_height, self.xg_for,
              self.xg_against, self.field_tilt, self.ppda, self.pass_completion,
              self.mean_pass_length],
             dtype=np.float32,
@@ -177,13 +175,13 @@ class WindowStats:
     def normalised(self) -> np.ndarray:
         """Scaled to roughly [0, 1] for the policy network."""
         a = self.as_array()
-        scale = np.array([1.0, 8.0, 8.0, 1.5, 1.5, 1.0, 30.0, 1.0, 40.0],
+        scale = np.array([1.0, 8.0, 1.0, 1.5, 1.5, 1.0, 30.0, 1.0, 40.0],
                          dtype=np.float32)
         return np.clip(a / scale, 0.0, 1.5)
 
     @classmethod
     def feature_names(cls) -> tuple[str, ...]:
-        return ("possession", "shots_for", "shots_against", "xg_for",
+        return ("possession", "shots_for", "defensive_line_height", "xg_for",
                 "xg_against", "field_tilt", "ppda", "pass_completion",
                 "mean_pass_length")
 

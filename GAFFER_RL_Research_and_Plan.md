@@ -125,12 +125,12 @@ The environment is the project. Freeze this spec in Phase 0 and do not extend it
 
 **Build it in two tiers.** Tier 1 (movement, passing, shooting, xG) is what the Phase-1 gate tests. Tier 2 (fouls/cards, set pieces, duel refinement) lands in Phase 2 and is explicitly *not* gated. Attempting both tiers before the first gate is the single most likely way this project dies — see §6.
 
-**Physical layer** (all NumPy, batched over parallel matches; `dt = 0.2 s`, 90 min = 27,000 ticks)
+**Physical layer** (all NumPy, batched over parallel matches; `dt = 1.0 s`, 90 min = 5,400 ticks)
 - 105 × 68 m pitch, continuous `(x, y)` per player, per-player `max_speed` and `stamina ∈ [0,1]` (1 = fresh).
 - Movement: each player steers toward a **target point** = formation slot, translated by ball position (compactness) and modulated by block height and team width. Speed scales with stamina; stamina drains faster under high press and sprinting, recovers when out of possession phases.
 - Ball: constant-deceleration model, position + velocity, plus a flight time for aerial passes.
 
-**Event layer** (fires only when a player is in possession, every 0.6–1.4 s of "decision time")
+**Event layer** (fires only when a player is in possession, every 2.5 s on a shared batched clock)
 - Candidate actions: short pass, long/switch pass, dribble/carry, shot, clearance.
 - Selection: softmax over an **expected-value score** for each option = `pitch_control(target) × EPV(target)` minus a risk term, with the softmax temperature and the risk term set by the coach's *tempo/directness* parameter. Pitch control uses a simplified Spearman-style time-to-intercept model — the Friends-of-Tracking `Metrica_PitchControl.py` reference implementation is the pattern to follow (do not copy wholesale; re-implement in vectorised form).
 - Defensive side: press triggers fire when the ball enters a team's press zone (set by block height + press intensity); duel outcomes are stochastic with probabilities depending on numbers-up/down locally and stamina.
@@ -159,7 +159,7 @@ Euro 2020, WC 2022, WWC 2023, WEuro 2022), extracted 15 Aug 2026. Regenerate wit
 
 Publishing this table is valuable than any amount of reward-curve polish: it is the evidence that your environment models a *real-world problem context*, which is the stated intent of the evaluation.
 
-**Performance target:** ≥ 300 simulated matches/minute on a Colab CPU with 32 vectorised environments. Profile at the end of Phase 1. If short, in order: raise `dt` to 0.4 s → shorten the match to 60 sim-minutes → drop to 16 envs with a C-accelerated inner loop via Numba. Horizontal scale-out (many CPU containers) is a separate lever and is covered in §6.4 — it helps evaluation and sweeps, not single-run training latency.
+**Performance target:** a sustained ≥ 60 simulated matches/minute on the presenting laptop at 48 vectorised environments. The cold rate is roughly 98; the lower gate is the post-load thermal floor measured while running the complete audit. Horizontal scale-out remains the lever for final evaluation and sweeps.
 
 ### 3.3 The MDP (state this precisely in the write-up)
 
@@ -180,8 +180,8 @@ Publishing this table is valuable than any amount of reward-curve polish: it is 
 **Observation** (≈ 55 dims, all normalised):
 - Match state (5): score diff, minutes remaining, subs left, windows left, own red-card flag.
 - Squad (13): 11 stamina values, count below threshold, yellow-card count.
-- Own rolling form over the last window (8): possession %, shots for/against, xG for/against, field tilt, PPDA, pass completion.
-- Opponent observables (8): the same statistics from the opponent's side.
+- Own rolling form over the last window (9): possession, shots for, defensive-line height, xG for/against, field tilt, PPDA, pass completion and mean pass length.
+- Opponent observables (9): the same statistics from the opponent's side.
 - Own current tactic, one-hot (14).
 - **Belief over opponent archetype `b_t` (K ≈ 6–8).**
 
@@ -354,7 +354,7 @@ Then, still in Phase 1: vectorise to 32 envs and profile; run the §3.2 calibrat
 
 > **HARD GATE 1 — the project's one real go/no-go.** All four must hold:
 > 1. **A match that looks like football** — a football-literate person watching the animation says yes, unprompted.
-> 2. Calibration bands in §3.2 met, and ≥ 300 matches/min on Colab CPU.
+> 2. Calibration bands in §3.2 met, and the sustained local throughput floor in §3.2 cleared.
 > 3. Archetype separability ≥ 70% with no archetype below 50% recall.
 > 4. A non-transitive cycle exists in the scripted payoff matrix (after deliberate EV tuning, per §3.5).
 >

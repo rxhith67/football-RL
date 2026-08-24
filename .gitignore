@@ -29,3 +29,4 @@ Thumbs.db
 
 # Run logs — regenerate by re-running the sweeps
 *.log
+data/*_progress.json

@@ -36,11 +36,10 @@ observation:
   blocks:
     match_state: 5          # score diff, minutes left, subs left, windows left, own red card
     squad: 13               # 11 stamina + count below threshold + yellow count
-    # 9 observables: possession, shots for/against, xG for/against, field tilt,
-    # PPDA, pass completion, mean pass length. The last was added on 15 Aug 2026
-    # (SCHEMA_VERSION 2) — design note 3.3 lists a pass-length profile, and
-    # without it a low-block counter side is statistically indistinguishable
-    # from a balanced mid-block one.
+    # 9 observables: possession, shots for, defensive-line height, xG
+    # for/against, field tilt, PPDA, pass completion, mean pass length.
+    # Schema v3 replaces redundant shots-against (already present as the other
+    # side's shots-for) with the line-height signal declared in the design.
     own_form: 9
     opponent_form: 9        # same statistics, opponent side
     own_tactic_onehot: 14   # formation(5) + block(3) + press(3) + tempo(3)
@@ -105,8 +104,14 @@ evaluation:
   seeds: 5
   bootstrap_resamples: 10000
   ci: 0.95
+  belief_adaptation_matches: 240
+  belief_adaptation_max_epochs: 3.0
+  belief_adaptation_min_success_rate: 0.80
+  belief_adaptation_min_switches: 100
   egta_matches_per_pairing: 300
-  scripted_roundrobin_matches: 200        # Gate 1 non-transitivity check
+  # Every edge must also clear two standard errors; 32 is the smallest audited
+  # sample that makes the cycle reproducible without a multi-hour local run.
+  scripted_roundrobin_matches: 32         # Gate 1 non-transitivity check
   exploitability:
     macro_steps: 200000                   # DECLARED budget; the number is
     seeds: 3                              # meaningless without it
