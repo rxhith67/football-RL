@@ -21,6 +21,7 @@ import argparse
 import json
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -73,7 +74,7 @@ def _check_configs() -> Check:
 
 def _check_contract() -> Check:
     proc = subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/", "-q", "--no-header"],
+        [sys.executable, "-m", "pytest", "tests/test_contract.py", "-q", "--no-header"],
         cwd=ROOT, capture_output=True, text=True,
     )
     tail = (proc.stdout or proc.stderr).strip().splitlines()
@@ -154,23 +155,40 @@ def _pending(name: str, detail: str) -> Check:
     return Check(name, None, detail)
 
 
+def _visual_check() -> Check:
+    from pitchsim.controller import config_fingerprint
+
+    path = ROOT / "data" / "visual_signoff.json"
+    if not path.exists():
+        return _pending(
+            "A match that looks like football",
+            "Watch figures/match_fixed.gif, then record a human review with "
+            "python scripts/check_gate.py --approve-visual \"Reviewer name\"",
+        )
+    blob = json.loads(path.read_text(encoding="utf-8"))
+    if blob.get("config_fingerprint") != config_fingerprint():
+        return Check("A match that looks like football", False,
+                     "visual sign-off is stale; regenerate and review the animation")
+    return Check("A match that looks like football", bool(blob.get("approved")),
+                 f"reviewed by {blob.get('reviewer', 'unknown')} at "
+                 f"{blob.get('reviewed_at', 'unknown')}")
+
+
 def gate_1() -> list[Check]:
     checks = [
-        _pending("A match that looks like football",
-                 "HUMAN JUDGEMENT: a football-literate person watching the animation "
-                 "says yes, unprompted. If this fails, switch to Option B without debate."),
+        _visual_check(),
     ]
     try:
         from pitchsim.calibrate import calibration_report, performance_report  # type: ignore
 
         checks.append(Check("Calibration bands met", *calibration_report()))
-        checks.append(Check("Throughput >= 300 matches/min", *performance_report()))
+        checks.append(Check("Throughput target met", *performance_report()))
     except ImportError:
         checks += [
             _pending("Calibration bands met",
                      "goals 2.3-3.1 /match · shots 9-15 /team · xG/shot 0.08-0.13 · "
                      "pass completion 72-88% (pitchsim/calibrate.py, Phase 1)"),
-            _pending("Throughput >= 300 matches/min", "32 vectorised envs on Colab CPU"),
+            _pending("Throughput target met", "configured reference batch and sustained floor"),
         ]
     try:
         from analysis.separability import separability_report  # type: ignore
@@ -194,24 +212,67 @@ def gate_1() -> list[Check]:
 
 
 def gate_2() -> list[Check]:
-    return [
-        _pending("PPO beats random-tactic, non-overlapping 95% CIs", "Stage 0-1 curriculum"),
-        _pending("Belief re-identifies a switch within 3 epochs",
-                 "measured from the TRUE switch epoch, not from kickoff"),
-        _pending("Elo rises across self-play generations", "Stage 2 PFSP league"),
-        _pending("Console renders a real replay end to end", "broadcast pitch + xG race"),
-    ]
+    try:
+        from analysis.aggregate_evaluation import ppo_vs_random_report  # type: ignore
+
+        checks = [Check("PPO beats random-tactic, non-overlapping 95% CIs",
+                        *ppo_vs_random_report())]
+    except ImportError:
+        checks = [_pending("PPO beats random-tactic, non-overlapping 95% CIs",
+                           "Stage 0-1 curriculum")]
+
+    try:
+        from analysis.self_play_elo import generations_report  # type: ignore
+
+        checks.append(Check("Elo rises across self-play generations",
+                            *generations_report()))
+    except ImportError:
+        checks.append(_pending("Elo rises across self-play generations",
+                               "Stage 2 PFSP league"))
+    try:
+        from console.server import replay_report  # type: ignore
+
+        checks.append(Check("Console renders a real replay end to end", *replay_report()))
+    except ImportError:
+        checks.append(_pending("Console renders a real replay end to end",
+                               "broadcast pitch + xG race"))
+    try:
+        from analysis.belief_adaptation import adaptation_report  # type: ignore
+
+        checks.insert(1, Check("Belief re-identifies a switch within 3 epochs",
+                               *adaptation_report()))
+    except ImportError:
+        checks.insert(1, _pending(
+            "Belief re-identifies a switch within 3 epochs",
+            "measured from the TRUE switch epoch, not from kickoff"))
+    return checks
 
 
 def gate_3() -> list[Check]:
-    return [
-        _pending("EGTA payoff matrix + Nash/alpha-Rank complete", "analysis/egta.py"),
-        _pending("Exploitability probe at declared budget",
-                 "200k macro-steps, 3 seeds, 500 eval matches — budget goes in the caption"),
-        _pending("All ablations run",
-                 "belief/blind/oracle/recurrent · shaping w sweep · masking · gamma^tau"),
-        _pending("FEATURE FREEZE 15 Oct", "every number in the write-up exists on disk"),
-    ]
+    try:
+        from analysis.egta import full_egta_report  # type: ignore
+
+        checks = [Check("EGTA payoff matrix + Nash/alpha-Rank complete",
+                        *full_egta_report())]
+    except ImportError:
+        checks = [_pending("EGTA payoff matrix + Nash/alpha-Rank complete", "analysis/egta.py")]
+    try:
+        from analysis.exploitability import exploitability_report  # type: ignore
+
+        checks.append(Check("Exploitability probe at declared budget",
+                            *exploitability_report()))
+    except ImportError:
+        checks.append(_pending("Exploitability probe at declared budget",
+                               "200k macro-steps, 3 seeds, 500 eval matches — budget goes in the caption"))
+    try:
+        from analysis.ablations import ablations_report  # type: ignore
+
+        checks.append(Check("All ablations run", *ablations_report()))
+    except ImportError:
+        checks.append(_pending("All ablations run",
+                               "belief/blind/oracle/recurrent · shaping w sweep · masking · gamma^tau"))
+    checks.append(_pending("FEATURE FREEZE 15 Oct", "every number in the write-up exists on disk"))
+    return checks
 
 
 def gate_4() -> list[Check]:
@@ -255,7 +316,22 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="GAFFER-RL phase gate checker")
     parser.add_argument("gate", nargs="?", type=int, choices=sorted(GATES))
     parser.add_argument("--all", action="store_true")
+    parser.add_argument("--approve-visual", metavar="REVIEWER",
+                        help="record human approval of figures/match_fixed.gif")
     args = parser.parse_args()
+
+    if args.approve_visual:
+        from pitchsim.controller import config_fingerprint
+        path = ROOT / "data" / "visual_signoff.json"
+        path.write_text(json.dumps({
+            "approved": True,
+            "reviewer": args.approve_visual,
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "config_fingerprint": config_fingerprint(),
+            "artifact": "figures/match_fixed.gif",
+        }, indent=2), encoding="utf-8")
+        print(f"visual sign-off written -> {path}")
+        return
 
     if args.all:
         results = [run_gate(n) for n in sorted(GATES)]

@@ -250,3 +250,24 @@ def simulate_policy(req: PolicyRequest):
 @app.get("/health")
 def health():
     return {"status": "ok", "engine": "PitchSimEngine", "is_stub": PitchSimEngine.IS_STUB}
+
+
+def replay_report(checkpoint: str = "stage0_bayesian_smdp_seed0") -> tuple[bool, str]:
+    """Gate 2: does /simulate_policy actually produce a trained-coach replay?"""
+    from pitchsim import validate_replay
+
+    path = ROOT / "checkpoints" / f"{checkpoint}.zip"
+    if not path.exists():
+        return False, f"no checkpoint at {path}; train Stage 0 first"
+
+    replay = simulate_policy(PolicyRequest(seed=0, checkpoint=checkpoint))
+    problems = validate_replay(replay)
+    if problems:
+        return False, "; ".join(problems)
+    if not replay["meta"]["controller"].startswith("trained coach"):
+        return False, f"fell back to {replay['meta']['controller']!r}"
+    result = replay.get("result")
+    if not result or result["n_decisions"] < 2:
+        return False, "replay had too few decision epochs to be a real match"
+    return True, (f"{checkpoint}: score {result['score'][0]}-{result['score'][1]}, "
+                  f"{result['n_decisions']} decisions, replay schema valid")

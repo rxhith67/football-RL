@@ -36,6 +36,7 @@ class MatchOutcomes:
     trailing_at_half: np.ndarray           # bool
     belief_correct: np.ndarray = field(default_factory=lambda: np.zeros(0, bool))
     adaptation_epochs: np.ndarray = field(default_factory=lambda: np.zeros(0))
+    n_switches: int = 0
 
     def __len__(self) -> int:
         return len(self.points)
@@ -87,6 +88,11 @@ def summarise(outcomes: MatchOutcomes, seed: int = 0) -> dict:
     if len(outcomes.adaptation_epochs):
         finite = outcomes.adaptation_epochs[np.isfinite(outcomes.adaptation_epochs)]
         result["adaptation_epochs"] = float(finite.mean()) if len(finite) else float("nan")
+    if outcomes.n_switches:
+        result["n_switches"] = int(outcomes.n_switches)
+        result["n_adapted"] = int(len(outcomes.adaptation_epochs))
+        result["adaptation_success_rate"] = float(
+            len(outcomes.adaptation_epochs) / outcomes.n_switches)
     return result
 
 
@@ -140,9 +146,12 @@ def play(agent, env, n_matches: int, deterministic: bool = True,
     `agent` is either a baseline exposing `act(obs, env)` or an SB3 model
     exposing `predict(obs, action_masks=..., deterministic=...)`.
     """
-    points, goal_diff, xg_diff, trailing, correct = [], [], [], [], []
+    points, goal_diff, xg_diff, trailing, correct, adaptation = [], [], [], [], [], []
+    n_switches = 0
 
     obs = env.reset()
+    if hasattr(agent, "reset"):
+        agent.reset(env.num_envs)
     is_sb3 = hasattr(agent, "predict")
 
     while len(points) < n_matches:
@@ -152,14 +161,9 @@ def play(agent, env, n_matches: int, deterministic: bool = True,
         else:
             actions = agent.act(obs, env)
 
-        half_before = env.engine.minutes() < 45.0
-        score_before = env.engine.score.copy()
         obs, rewards, dones, infos = env.step(actions)
-
-        # Record which matches were behind at the interval, before any reset.
-        just_reached_half = half_before & (env.engine.minutes() >= 45.0)
-        if just_reached_half.any():
-            env._half_score[just_reached_half] = score_before[just_reached_half]
+        if hasattr(agent, "learn") and not is_sb3:
+            agent.learn(rewards, env)
 
         if dones.all():
             for info in infos:
@@ -169,10 +173,12 @@ def play(agent, env, n_matches: int, deterministic: bool = True,
                 home, away = episode["score"]
                 points.append(episode["points"])
                 goal_diff.append(home - away)
-                xg_diff.append(0.0)
-                trailing.append(False)
+                xg_diff.append(float(episode.get("xg_diff", 0.0)))
+                trailing.append(bool(episode.get("trailing_at_half", False)))
                 if collect_belief:
                     correct.append(bool(episode.get("belief_correct", False)))
+                    adaptation.extend(float(x) for x in episode.get("adaptation_epochs", []))
+                    n_switches += int(episode.get("n_true_switches", 0))
                 if len(points) >= n_matches:
                     break
 
@@ -182,6 +188,8 @@ def play(agent, env, n_matches: int, deterministic: bool = True,
         xg_diff=np.array(xg_diff[:n_matches], dtype=np.float64),
         trailing_at_half=np.array(trailing[:n_matches], dtype=bool),
         belief_correct=np.array(correct[:n_matches], dtype=bool),
+        adaptation_epochs=np.array(adaptation, dtype=np.float64),
+        n_switches=n_switches,
     )
 
 

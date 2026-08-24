@@ -28,6 +28,7 @@ from pitchsim.engine import BatchedEngine
 
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "data" / "separability.json"
+PROGRESS = ROOT / "data" / "separability_progress.json"
 
 
 def collect_windows(
@@ -48,7 +49,20 @@ def collect_windows(
     rng = np.random.default_rng(seed)
 
     features, labels = [], []
-    for k in range(N_ARCHETYPES):
+    first_archetype = 0
+    if PROGRESS.exists():
+        saved = json.loads(PROGRESS.read_text(encoding="utf-8"))
+        if (saved.get("config_fingerprint") == ctrl.config_fingerprint()
+                and saved.get("windows_per_archetype") == windows_per_archetype
+                and saved.get("window_minutes") == window_minutes
+                and saved.get("seed") == seed):
+            features = [np.asarray(saved["features"], dtype=np.float64)]
+            labels = [np.asarray(saved["labels"], dtype=np.int64)]
+            first_archetype = int(saved.get("completed_archetypes", 0))
+            if verbose and first_archetype:
+                print(f"  resuming after {first_archetype} archetypes", flush=True)
+
+    for k in range(first_archetype, N_ARCHETYPES):
         engine = BatchedEngine(batch=windows_per_archetype, config=physics)
 
         # The archetype under test is HOME; the opponent is drawn at random so the
@@ -70,6 +84,15 @@ def collect_windows(
         if verbose:
             print(f"  {archetype_table()[1][k]:24} {len(features) * windows_per_archetype:6d} windows",
                   flush=True)
+        PROGRESS.write_text(json.dumps({
+            "config_fingerprint": ctrl.config_fingerprint(),
+            "windows_per_archetype": windows_per_archetype,
+            "window_minutes": window_minutes,
+            "seed": seed,
+            "completed_archetypes": k + 1,
+            "features": np.concatenate(features).tolist(),
+            "labels": np.concatenate(labels).tolist(),
+        }), encoding="utf-8")
 
     return np.concatenate(features), np.concatenate(labels)
 
@@ -157,6 +180,7 @@ def run(windows_per_archetype: int = 60, seed: int = 0, verbose: bool = True) ->
                   "NOT by adding features the online filter will not have.")
 
     result = {
+        "config_fingerprint": ctrl.config_fingerprint(),
         "accuracy": accuracy,
         "recall": recall.tolist(),
         "labels": labels,
@@ -166,6 +190,15 @@ def run(windows_per_archetype: int = 60, seed: int = 0, verbose: bool = True) ->
     }
     RESULTS.parent.mkdir(parents=True, exist_ok=True)
     RESULTS.write_text(json.dumps(result, indent=2), encoding="utf-8")
+
+    # The online filter must be the model that was actually audited above.
+    # Previously separability regenerated its own classifier but left the
+    # committed belief_model.json stale, so training and the reported gate used
+    # different distributions.
+    from envs.belief import BeliefFilter
+    means = np.stack([x[y == k].mean(axis=0) for k in range(N_ARCHETYPES)])
+    variances = np.stack([x[y == k].var(axis=0) for k in range(N_ARCHETYPES)])
+    BeliefFilter(means, variances).save()
     return result
 
 
@@ -174,6 +207,8 @@ def separability_report() -> tuple[bool, str]:
     if not RESULTS.exists():
         return False, "not yet run: python -m analysis.separability"
     blob = json.loads(RESULTS.read_text(encoding="utf-8"))
+    if blob.get("config_fingerprint") != ctrl.config_fingerprint():
+        return False, "stale evidence: rerun python -m analysis.separability"
     return blob["passed"], (
         f"accuracy {blob['accuracy']:.3f}, worst recall {min(blob['recall']):.3f}, "
         f"{blob['n_windows']} windows"
