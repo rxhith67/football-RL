@@ -30,3 +30,11 @@ Thumbs.db
 # Run logs — regenerate by re-running the sweeps
 *.log
 data/*_progress.json
+
+# Local native builds and generated runtime logs
+/tmp/
+/data/line_coach/native-logs/
+
+# Required reduced-project checkpoints and portable submission
+!/data/line_coach/ppo_seed_*.zip
+!/artifacts/GAFFER_Line_Coach_Submission.zip

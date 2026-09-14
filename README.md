@@ -1,5 +1,10 @@
 # GAFFER-RL
 
+> **Reduced finished-project deliverable:** use [Defensive Line Lab](LINE_COACH_README.md).
+> It has three coaching actions, PPO checkpoints, held-out baseline comparisons
+> and an offline replay demo. Launch with `python scripts/serve_line_coach.py`.
+> The broader PITCHSIM project below is preserved as earlier development work.
+
 *An RL football coach that infers the opposing manager's hidden game plan from the
 run of play, counter-punches with macro-tactical changes, and can be challenged
 live by a human coach.*

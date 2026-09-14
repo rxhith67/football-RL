@@ -1,0 +1,4 @@
+# Preserve the byte-level source fingerprints stored with the trained models.
+envs/line_coach_env.py text eol=lf
+envs/robocup_coach_env.py text eol=lf
+scripts/finish_line_coach.py text eol=lf

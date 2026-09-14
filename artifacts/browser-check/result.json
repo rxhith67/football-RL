@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "layout_only": false,
+  "controls_checked": [
+    "play",
+    "pause",
+    "restart",
+    "decision jump",
+    "scrub",
+    "policy selection",
+    "speed"
+  ],
+  "result_rows": 7,
+  "complete_replay_played": true,
+  "javascript_errors": [],
+  "mobile_overflow": false,
+  "video": "artifacts\\browser-check\\video\\80e17cdcfa70861a631ef4c368aee512.webm"
+}

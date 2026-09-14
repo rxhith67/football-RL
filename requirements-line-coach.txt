@@ -1,0 +1,11 @@
+# Demo playback uses only Python's standard library.
+# These packages are for training/testing with the separate Linux native build.
+numpy>=1.26,<3
+gymnasium>=1.0,<2
+stable-baselines3>=2.6,<3
+torch==2.8.0
+PyYAML>=6,<7
+scipy>=1.12,<2
+psutil>=5.9,<8
+tensorboard>=2.17,<3
+pytest>=8,<9

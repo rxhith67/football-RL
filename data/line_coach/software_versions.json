@@ -1,0 +1,11 @@
+{
+  "verified_in": "existing Ubuntu WSL training environment",
+  "python": "3.12.3",
+  "stable_baselines3": "2.9.0",
+  "gymnasium": "1.3.0",
+  "numpy": "2.5.3",
+  "torch": "2.8.0+cpu",
+  "native_bundle": "/home/rohith_syam/robocup-proto/R2DRL",
+  "upstream_revision": "d4647b7e8cc31386a6e5cf94141cd2483113b56b",
+  "note": "Native build includes earlier local build/seeding repairs. This file is not a clean-machine installer."
+}

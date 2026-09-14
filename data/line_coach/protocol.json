@@ -1,0 +1,34 @@
+{
+  "requested_timesteps_per_seed": 2304,
+  "training_seeds": [
+    31,
+    47,
+    59
+  ],
+  "workers": 3,
+  "horizon": 1200,
+  "eval_episodes_per_policy": 12,
+  "evaluation_seeds": [
+    800000,
+    800001,
+    800002,
+    800003,
+    800004,
+    800005,
+    800006,
+    800007,
+    800008,
+    800009,
+    800010,
+    800011
+  ],
+  "checkpoint_selection": "Final checkpoint; all training seeds reported. Demo uses first seed.",
+  "primary_metric": "Mean raw goal difference over held-out episodes",
+  "reward": "Goal difference + 0.05 * (0.99 * next ball-x potential - previous potential); terminal potential zero",
+  "scope": "Finite-horizon defensive-line control; no full-match or real-world realism claim",
+  "sources": {
+    "scripts/finish_line_coach.py": "cc27e697ccd0e7897cb91138c764e2aa66dc866d80237e76b3a371227036e6b8",
+    "envs/line_coach_env.py": "44db97e08aff0686d44726e28e0e40d3cfb5cb8d9da88293a7b00ab504fba1ac",
+    "envs/robocup_coach_env.py": "55de1a90756a88659598826c8dd67748861ccfc19196128ebcaa17a25d5574aa"
+  }
+}

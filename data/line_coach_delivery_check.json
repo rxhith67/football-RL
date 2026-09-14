@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "training_seeds": [
+    31,
+    47,
+    59
+  ],
+  "evaluation_episodes": 84,
+  "replays": 7,
+  "source_hashes_match": true,
+  "published_data_matches_raw": true,
+  "archive_integrity": true,
+  "archive_bytes": 5403662
+}

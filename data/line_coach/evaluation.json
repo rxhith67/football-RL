@@ -1,0 +1,1521 @@
+[
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 2,
+    "native_seed": 800002,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.989880124100484,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 35.52229196999997,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 0,
+    "native_seed": 800000,
+    "score_left": 1,
+    "score_right": 2,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9989323287706362,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 35.943847258000005,
+    "success": true,
+    "replay": "replay_ppo_31.json"
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 1,
+    "native_seed": 800001,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.993453208114953,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 36.54674792900005,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 3,
+    "native_seed": 800003,
+    "score_left": 1,
+    "score_right": 3,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9875020066490394,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 23.4863785739999,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 4,
+    "native_seed": 800004,
+    "score_left": 0,
+    "score_right": 4,
+    "goal_difference": -4,
+    "points": 0,
+    "return": -3.9897752117002385,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 24.254020000000082,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 5,
+    "native_seed": 800005,
+    "score_left": 1,
+    "score_right": 0,
+    "goal_difference": 1,
+    "points": 3,
+    "return": 1.0086312637287191,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 23.49338459899991,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 6,
+    "native_seed": 800006,
+    "score_left": 1,
+    "score_right": 3,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9908837183490393,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 24.744301280000172,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 7,
+    "native_seed": 800007,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9946550065889026,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 23.826931580000064,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 8,
+    "native_seed": 800008,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.996649437109706,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 24.111928818000024,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 9,
+    "native_seed": 800009,
+    "score_left": 1,
+    "score_right": 3,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.998913218210452,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 23.174969338999972,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 11,
+    "native_seed": 800011,
+    "score_left": 1,
+    "score_right": 4,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -3.0001243565245526,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 23.68310458200017,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 31,
+    "episode": 10,
+    "native_seed": 800010,
+    "score_left": 0,
+    "score_right": 5,
+    "goal_difference": -5,
+    "points": 0,
+    "return": -4.990109107313677,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 24.326680982000198,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 1,
+    "native_seed": 800001,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9915623669172635,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.07543597200015,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 0,
+    "native_seed": 800000,
+    "score_left": 0,
+    "score_right": 4,
+    "goal_difference": -4,
+    "points": 0,
+    "return": -3.9963439321881156,
+    "action_counts": [
+      0,
+      57,
+      3
+    ],
+    "seconds": 24.242646415999843,
+    "success": true,
+    "replay": "replay_ppo_47.json"
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 2,
+    "native_seed": 800002,
+    "score_left": 0,
+    "score_right": 4,
+    "goal_difference": -4,
+    "points": 0,
+    "return": -3.9900606168938255,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.775366076999944,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 3,
+    "native_seed": 800003,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.994746282743523,
+    "action_counts": [
+      0,
+      59,
+      1
+    ],
+    "seconds": 22.456064133000154,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 4,
+    "native_seed": 800004,
+    "score_left": 1,
+    "score_right": 2,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9892087012911216,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.121881884999993,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 5,
+    "native_seed": 800005,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.995457286311081,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.789942084999893,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 6,
+    "native_seed": 800006,
+    "score_left": 1,
+    "score_right": 2,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9932356525044888,
+    "action_counts": [
+      0,
+      57,
+      3
+    ],
+    "seconds": 23.436127697000074,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 7,
+    "native_seed": 800007,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.9943180617019527,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.58412410799997,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 8,
+    "native_seed": 800008,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.9894254777005425,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.87962528900016,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 9,
+    "native_seed": 800009,
+    "score_left": 1,
+    "score_right": 3,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9927624635081742,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.57808085900001,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 10,
+    "native_seed": 800010,
+    "score_left": 1,
+    "score_right": 1,
+    "goal_difference": 0,
+    "points": 1,
+    "return": 0.002676260593813127,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.439125172000104,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 47,
+    "episode": 11,
+    "native_seed": 800011,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.9940196890719237,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 24.388774670999965,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 0,
+    "native_seed": 800000,
+    "score_left": 2,
+    "score_right": 1,
+    "goal_difference": 1,
+    "points": 3,
+    "return": 1.0016211604371206,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.8763236650002,
+    "success": true,
+    "replay": "replay_ppo_59.json"
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 1,
+    "native_seed": 800001,
+    "score_left": 1,
+    "score_right": 2,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9962613650371785,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 24.258580130999917,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 2,
+    "native_seed": 800002,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.990746279590517,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.53849259599997,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 3,
+    "native_seed": 800003,
+    "score_left": 0,
+    "score_right": 5,
+    "goal_difference": -5,
+    "points": 0,
+    "return": -4.992554806513245,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.415452072000107,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 4,
+    "native_seed": 800004,
+    "score_left": 1,
+    "score_right": 1,
+    "goal_difference": 0,
+    "points": 1,
+    "return": 0.011847599373868672,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.42114290199993,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 5,
+    "native_seed": 800005,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9982579877246176,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.540474940999957,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 6,
+    "native_seed": 800006,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9977501868419352,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.722197238000035,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 7,
+    "native_seed": 800007,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9902310381457213,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.374643274999926,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 8,
+    "native_seed": 800008,
+    "score_left": 1,
+    "score_right": 3,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.991375502334209,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.814833775000125,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 9,
+    "native_seed": 800009,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.992220045957948,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.01298220800004,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 10,
+    "native_seed": 800010,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.9948710306754798,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.18735160799997,
+    "success": true
+  },
+  {
+    "policy": "ppo",
+    "model_seed": 59,
+    "episode": 11,
+    "native_seed": 800011,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.987794142748811,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.85069838000004,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 0,
+    "native_seed": 800000,
+    "score_left": 0,
+    "score_right": 0,
+    "goal_difference": 0,
+    "points": 1,
+    "return": -0.00047956091491503997,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 30.899734179999996,
+    "success": true,
+    "replay": "replay_normal_None.json"
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 1,
+    "native_seed": 800001,
+    "score_left": 0,
+    "score_right": 0,
+    "goal_difference": 0,
+    "points": 1,
+    "return": 0.00291998160257935,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 32.09713555899998,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 2,
+    "native_seed": 800002,
+    "score_left": 0,
+    "score_right": 0,
+    "goal_difference": 0,
+    "points": 1,
+    "return": 0.0023285210276953977,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 32.04197574099999,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 3,
+    "native_seed": 800003,
+    "score_left": 1,
+    "score_right": 0,
+    "goal_difference": 1,
+    "points": 3,
+    "return": 0.9942267275983472,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 22.905350750000025,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 5,
+    "native_seed": 800005,
+    "score_left": 0,
+    "score_right": 0,
+    "goal_difference": 0,
+    "points": 1,
+    "return": -0.002122561339194383,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 21.406535818000066,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 4,
+    "native_seed": 800004,
+    "score_left": 1,
+    "score_right": 0,
+    "goal_difference": 1,
+    "points": 3,
+    "return": 0.9981562051102522,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 23.820565905999956,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 6,
+    "native_seed": 800006,
+    "score_left": 0,
+    "score_right": 0,
+    "goal_difference": 0,
+    "points": 1,
+    "return": 0.0024691358255222503,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 22.588327202000073,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 8,
+    "native_seed": 800008,
+    "score_left": 0,
+    "score_right": 0,
+    "goal_difference": 0,
+    "points": 1,
+    "return": 0.003386388950282721,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 23.293582239999978,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 7,
+    "native_seed": 800007,
+    "score_left": 2,
+    "score_right": 1,
+    "goal_difference": 1,
+    "points": 3,
+    "return": 0.9981777111440894,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 24.311409981999986,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 9,
+    "native_seed": 800009,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9992017598586389,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 21.997528911000018,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 10,
+    "native_seed": 800010,
+    "score_left": 1,
+    "score_right": 0,
+    "goal_difference": 1,
+    "points": 3,
+    "return": 0.9986985536203717,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 22.263405407999926,
+    "success": true
+  },
+  {
+    "policy": "normal",
+    "model_seed": null,
+    "episode": 11,
+    "native_seed": 800011,
+    "score_left": 0,
+    "score_right": 0,
+    "goal_difference": 0,
+    "points": 1,
+    "return": -0.0011446500406018592,
+    "action_counts": [
+      60,
+      0,
+      0
+    ],
+    "seconds": 22.703355613999975,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 0,
+    "native_seed": 800000,
+    "score_left": 0,
+    "score_right": 4,
+    "goal_difference": -4,
+    "points": 0,
+    "return": -3.9915118083513814,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.36267527699988,
+    "success": true,
+    "replay": "replay_low_None.json"
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 1,
+    "native_seed": 800001,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9966795791870683,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.304354055999966,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 2,
+    "native_seed": 800002,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9939565495953427,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.45337249399995,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 3,
+    "native_seed": 800003,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9866027641403489,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.409894467999948,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 4,
+    "native_seed": 800004,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9963724978556856,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 24.044709613999885,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 5,
+    "native_seed": 800005,
+    "score_left": 1,
+    "score_right": 3,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9921565730259756,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.71340033599995,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 6,
+    "native_seed": 800006,
+    "score_left": 1,
+    "score_right": 2,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9949109415090638,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 25.417640897999945,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 7,
+    "native_seed": 800007,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9995944723710416,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 24.865717937,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 8,
+    "native_seed": 800008,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9944776617001044,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 24.271319193999943,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 9,
+    "native_seed": 800009,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9975615825615818,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 22.75704540699985,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 10,
+    "native_seed": 800010,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9930103267180386,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 23.74500339799988,
+    "success": true
+  },
+  {
+    "policy": "low",
+    "model_seed": null,
+    "episode": 11,
+    "native_seed": 800011,
+    "score_left": 1,
+    "score_right": 5,
+    "goal_difference": -4,
+    "points": 0,
+    "return": -3.9925201853567276,
+    "action_counts": [
+      0,
+      60,
+      0
+    ],
+    "seconds": 24.627387435000173,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 0,
+    "native_seed": 800000,
+    "score_left": 0,
+    "score_right": 4,
+    "goal_difference": -4,
+    "points": 0,
+    "return": -3.9901550280017535,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 36.032975520000036,
+    "success": true,
+    "replay": "replay_high_None.json"
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 1,
+    "native_seed": 800001,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.9963940402826337,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 35.988316767000015,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 2,
+    "native_seed": 800002,
+    "score_left": 0,
+    "score_right": 5,
+    "goal_difference": -5,
+    "points": 0,
+    "return": -4.990118463651859,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 36.29008705499996,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 3,
+    "native_seed": 800003,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9934438978657129,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 21.46515492499998,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 4,
+    "native_seed": 800004,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9960122856982059,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 21.40689409400011,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 5,
+    "native_seed": 800005,
+    "score_left": 0,
+    "score_right": 6,
+    "goal_difference": -6,
+    "points": 0,
+    "return": -5.987915899242624,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 22.157818213000155,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 6,
+    "native_seed": 800006,
+    "score_left": 0,
+    "score_right": 4,
+    "goal_difference": -4,
+    "points": 0,
+    "return": -4.001858887552516,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 23.248040274999994,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 7,
+    "native_seed": 800007,
+    "score_left": 0,
+    "score_right": 5,
+    "goal_difference": -5,
+    "points": 0,
+    "return": -4.994791238615058,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 23.768899609000073,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 8,
+    "native_seed": 800008,
+    "score_left": 0,
+    "score_right": 4,
+    "goal_difference": -4,
+    "points": 0,
+    "return": -3.98376429314725,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 22.917755569000064,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 10,
+    "native_seed": 800010,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -1.000654192586662,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 21.09913633999986,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 9,
+    "native_seed": 800009,
+    "score_left": 2,
+    "score_right": 1,
+    "goal_difference": 1,
+    "points": 3,
+    "return": 1.0008158079784477,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 22.495094748999918,
+    "success": true
+  },
+  {
+    "policy": "high",
+    "model_seed": null,
+    "episode": 11,
+    "native_seed": 800011,
+    "score_left": 1,
+    "score_right": 3,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9996819765018303,
+    "action_counts": [
+      0,
+      0,
+      60
+    ],
+    "seconds": 21.793198128000085,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 0,
+    "native_seed": 800000,
+    "score_left": 1,
+    "score_right": 0,
+    "goal_difference": 1,
+    "points": 3,
+    "return": 1.0040799180259927,
+    "action_counts": [
+      22,
+      21,
+      17
+    ],
+    "seconds": 34.97582965299989,
+    "success": true,
+    "replay": "replay_random_None.json"
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 1,
+    "native_seed": 800001,
+    "score_left": 1,
+    "score_right": 1,
+    "goal_difference": 0,
+    "points": 1,
+    "return": -0.00014865687955150156,
+    "action_counts": [
+      18,
+      20,
+      22
+    ],
+    "seconds": 35.53587751100008,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 2,
+    "native_seed": 800002,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9956342629778663,
+    "action_counts": [
+      19,
+      23,
+      18
+    ],
+    "seconds": 35.847193313999924,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 3,
+    "native_seed": 800003,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.99250641565345,
+    "action_counts": [
+      21,
+      25,
+      14
+    ],
+    "seconds": 21.97046811900009,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 4,
+    "native_seed": 800004,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9976656990614727,
+    "action_counts": [
+      12,
+      20,
+      28
+    ],
+    "seconds": 22.53600257800008,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 5,
+    "native_seed": 800005,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.991645673848687,
+    "action_counts": [
+      20,
+      23,
+      17
+    ],
+    "seconds": 22.606601372999876,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 6,
+    "native_seed": 800006,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9943393477555365,
+    "action_counts": [
+      24,
+      18,
+      18
+    ],
+    "seconds": 25.200950338999974,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 7,
+    "native_seed": 800007,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.994615593520459,
+    "action_counts": [
+      14,
+      24,
+      22
+    ],
+    "seconds": 24.983927512000037,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 8,
+    "native_seed": 800008,
+    "score_left": 0,
+    "score_right": 2,
+    "goal_difference": -2,
+    "points": 0,
+    "return": -1.9908983515007412,
+    "action_counts": [
+      13,
+      22,
+      25
+    ],
+    "seconds": 23.611504637999815,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 9,
+    "native_seed": 800009,
+    "score_left": 0,
+    "score_right": 1,
+    "goal_difference": -1,
+    "points": 0,
+    "return": -0.9907591491993523,
+    "action_counts": [
+      13,
+      27,
+      20
+    ],
+    "seconds": 23.783874252000032,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 11,
+    "native_seed": 800011,
+    "score_left": 0,
+    "score_right": 0,
+    "goal_difference": 0,
+    "points": 1,
+    "return": 0.0029940696358680755,
+    "action_counts": [
+      19,
+      17,
+      24
+    ],
+    "seconds": 22.430982478000033,
+    "success": true
+  },
+  {
+    "policy": "random",
+    "model_seed": null,
+    "episode": 10,
+    "native_seed": 800010,
+    "score_left": 0,
+    "score_right": 3,
+    "goal_difference": -3,
+    "points": 0,
+    "return": -2.9873068970594905,
+    "action_counts": [
+      16,
+      25,
+      19
+    ],
+    "seconds": 23.991694972999994,
+    "success": true
+  }
+]
