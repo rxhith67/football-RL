@@ -1,0 +1,26 @@
+{
+ "training": {
+  "q_possession_run1": {
+   "iter": 25,
+   "episodes": 300,
+   "decisions": 9000,
+   "engine_steps": 900300,
+   "wall_hours": 0.6068192198541429,
+   "greedy_counts": [
+    80,
+    80,
+    83
+   ],
+   "visit_weighted_greedy": [
+    0.376,
+    0.313,
+    0.311
+   ],
+   "states_visited": 243,
+   "median_visits_per_state_action": 8.0
+  }
+ },
+ "greedy_policy_agreement_fraction_of_243_states": {
+  "q_possession_run1 vs A_q_original": 0.3292181069958848
+ }
+}

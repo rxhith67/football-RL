@@ -1,0 +1,55 @@
+{
+ "A_sha256_matches_frozen": true,
+ "A": {
+  "shape": [
+   243,
+   3
+  ],
+  "finite": true,
+  "iter": 100
+ },
+ "B_current": {
+  "shape": [
+   243,
+   3
+  ],
+  "finite": true,
+  "iter": 25,
+  "episodes": 300,
+  "q_is_plain_q_learning_table": true,
+  "has_rng_state": true
+ },
+ "C_format_from_smoke_test": {
+  "shape": [
+   243,
+   3
+  ],
+  "q_equals_mean_of_q1_q2": true,
+  "iter": 3
+ },
+ "plan": {
+  "matches_per_iteration": 12,
+  "stop_iteration_for_300_matches": 25,
+  "stop_exact": true,
+  "B_iterations_remaining": 0,
+  "B_matches_remaining": 0,
+  "B_next_match_seeds": [
+   2010300,
+   2010299
+  ],
+  "C_match_seeds": [
+   2010000,
+   2010299
+  ],
+  "epsilon_at_start_of_iteration_20": 0.3779,
+  "epsilon_at_last_iteration_25": 0.3457,
+  "note": "exploration schedule follows --iters 100 for both B and C, so the pilot is an exact prefix of the full plan"
+ },
+ "pilot_eval_seeds": {
+  "range": [
+   3100000,
+   3100029
+  ],
+  "overlaps": []
+ }
+}

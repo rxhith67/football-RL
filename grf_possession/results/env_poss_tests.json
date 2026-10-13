@@ -1,0 +1,63 @@
+{
+ "original_reward_parity": {
+  "decisions": 6,
+  "max_reward_diff": 0.0
+ },
+ "full_match_accounting": {
+  "steps": 3001,
+  "decisions": 30,
+  "possession_share": 0.5480535279805353,
+  "contested_frac": 0.43618793735421524,
+  "dead_frac": 0.01599466844385205,
+  "goal_events": 3,
+  "final_goal_diff": 3
+ },
+ "live_depth_by_side": {
+  "side0": [
+   [
+    0.0,
+    0.7099999785423279
+   ],
+   [
+    1.0,
+    0.7099999785423279
+   ],
+   [
+    0.7099999785423279,
+    0.7099999785423279
+   ]
+  ],
+  "side1": [
+   [
+    0.0,
+    0.7099999785423279
+   ],
+   [
+    1.0,
+    0.7099999785423279
+   ],
+   [
+    0.7099999785423279,
+    0.7099999785423279
+   ]
+  ]
+ },
+ "shape_by_side": {
+  "side0": {
+   "0": 0.5951026201152522,
+   "2": 0.7824641713412711
+  },
+  "side1": {
+   "0": 0.47928357226177465,
+   "2": 0.6488572170079607
+  }
+ },
+ "native_vs_native_mirror": {
+  "steps": 400,
+  "max_abs_diff_ball": 0.0
+ },
+ "native_default_vs_unmodified_max_diff": {
+  "side0": 0.0,
+  "side1": 0.0
+ }
+}

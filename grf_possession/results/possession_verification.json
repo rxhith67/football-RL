@@ -1,0 +1,46 @@
+{
+ "matches": 4,
+ "steps": 12004,
+ "step_classes_fraction": {
+  "ours/left owned": 0.2834055314895035,
+  "opp/right owned": 0.2590803065644785,
+  "contested (nobody owns, normal play)": 0.4369376874375208,
+  "dead ball (game_mode != 0)": 0.02057647450849717
+ },
+ "dead_ball_modes": {
+  "2": 96,
+  "3": 128,
+  "5": 16,
+  "6": 7
+ },
+ "left_owned_steps": {
+  "n": 3402,
+  "owner_player_distance_to_ball_median": 0.010497752421871552,
+  "p95": 0.018248115752603405,
+  "owner_is_nearest_own_player": 1.0,
+  "own_team_nearest_overall": 0.979129923574368,
+  "opponent_strictly_closer_than_0.02": 0.0
+ },
+ "right_owned_steps": {
+  "n": 3110,
+  "owner_player_distance_to_ball_median": 0.011178741586730066,
+  "p95": 0.01939113753963227,
+  "owner_is_nearest_own_player": 0.9967845659163987,
+  "own_team_nearest_overall": 0.9739549839228295,
+  "opponent_strictly_closer_than_0.02": 0.0
+ },
+ "contested_steps": {
+  "n": 5245,
+  "nearest_player_distance_median": 0.03263892240074111,
+  "p10": 0.007645332143244629,
+  "ball_airborne_z_gt_0.15": 0.8415633937082936,
+  "someone_within_owner_range_(<=owned p95)": 0.317254528122021
+ },
+ "ownership_spells": {
+  "count": 395,
+  "median_length": 10.0,
+  "share_shorter_than_5_steps": 0.26582278481012656,
+  "share_of_owned_time_in_spells_shorter_than_5": 0.03224815724815725
+ },
+ "possession_share_controlled_left": 0.5224201474201474
+}

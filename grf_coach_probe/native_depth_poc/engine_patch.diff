@@ -1,0 +1,99 @@
+diff --git a/third_party/gfootball_engine/ai.cpp b/third_party/gfootball_engine/ai.cpp
+index dfd73e0..52c23c3 100644
+--- a/third_party/gfootball_engine/ai.cpp
++++ b/third_party/gfootball_engine/ai.cpp
+@@ -148,7 +148,9 @@ BOOST_PYTHON_MODULE(_gameplayfootball) {
+       .def_readwrite("state", &GameEnv_Python::state)
+       .def_readwrite("waiting_for_game_count",
+                      &GameEnv_Python::waiting_for_game_count)
+-      .def("tracker_setup", &GameEnv::tracker_setup);
++      .def("tracker_setup", &GameEnv::tracker_setup)
++      .def("set_coach_defense_depth", &GameEnv::set_coach_defense_depth)
++      .def("get_live_defense_depth", &GameEnv::get_live_defense_depth);
+ 
+   class_<Vector3>("Vector3", init<float, float, float>())
+      .def("__getitem__", &Vector3::GetEnvCoord)
+diff --git a/third_party/gfootball_engine/src/game_env.cpp b/third_party/gfootball_engine/src/game_env.cpp
+index 8718dbe..1cd3b23 100644
+--- a/third_party/gfootball_engine/src/game_env.cpp
++++ b/third_party/gfootball_engine/src/game_env.cpp
+@@ -132,6 +132,23 @@ screenshoot GameEnv::get_frame() {
+   return GetGraphicsSystem()->GetScreen();
+ }
+ 
++void GameEnv::set_coach_defense_depth(int team_id, float value) {
++  SetGame(this);
++  GetTracker()->setDisabled(true);
++  if (team_id == 0 || team_id == 1) {
++    GetGameTask()->GetMatch()->GetTeam(team_id)->GetController()->SetCoachDefenseDepth(value);
++  }
++  GetTracker()->setDisabled(false);
++}
++
++float GameEnv::get_live_defense_depth(int team_id) {
++  SetGame(this);
++  GetTracker()->setDisabled(true);
++  float v = GetGameTask()->GetMatch()->GetTeam(team_id)->GetController()->GetLiveDefenseDepth();
++  GetTracker()->setDisabled(false);
++  return v;
++}
++
+ bool GameEnv::sticky_action_state(int action, bool left_team, int player) {
+   SetGame(this);
+   int controller_id = player + (left_team ? 0 : 11);
+diff --git a/third_party/gfootball_engine/src/game_env.hpp b/third_party/gfootball_engine/src/game_env.hpp
+index c6aa8fd..530fcf4 100644
+--- a/third_party/gfootball_engine/src/game_env.hpp
++++ b/third_party/gfootball_engine/src/game_env.hpp
+@@ -60,6 +60,9 @@ struct GameEnv {
+   std::string get_state(const std::string& pickle);
+   std::string set_state(const std::string& state);
+   void tracker_setup(long start, long end) { GetTracker()->setup(start, end); }
++  // PoC: team_id 0 = left, 1 = right. value in [0,1]; value < 0 clears the override.
++  void set_coach_defense_depth(int team_id, float value);
++  float get_live_defense_depth(int team_id);
+   void step();
+   void ProcessState(EnvState* state);
+   ScenarioConfig& config();
+diff --git a/third_party/gfootball_engine/src/onthepitch/teamAIcontroller.cpp b/third_party/gfootball_engine/src/onthepitch/teamAIcontroller.cpp
+index c97095f..2c5e586 100755
+--- a/third_party/gfootball_engine/src/onthepitch/teamAIcontroller.cpp
++++ b/third_party/gfootball_engine/src/onthepitch/teamAIcontroller.cpp
+@@ -1277,6 +1277,14 @@ void TeamAIController::UpdateTactics() {
+     }
+     iter++;
+   }
++  if (coachDefenseDepth >= 0.0f) liveTeamTactics.Set("position_defense_depth_factor", coachDefenseDepth);
++}
++
++void TeamAIController::SetCoachDefenseDepth(float value) {
++  coachDefenseDepth = value < 0.0f ? -1.0f : clamp(value, 0.0f, 1.0f);
++  // apply immediately; UpdateTactics() re-applies it every 1000 ms of match time
++  if (coachDefenseDepth >= 0.0f) liveTeamTactics.Set("position_defense_depth_factor", coachDefenseDepth);
++  // clearing deliberately does NOT call UpdateTactics(): live values re-sync on the engine own 1000 ms schedule
+ }
+ 
+ void TeamAIController::Reset() {
+diff --git a/third_party/gfootball_engine/src/onthepitch/teamAIcontroller.hpp b/third_party/gfootball_engine/src/onthepitch/teamAIcontroller.hpp
+index a8279a9..b7fb94c 100755
+--- a/third_party/gfootball_engine/src/onthepitch/teamAIcontroller.hpp
++++ b/third_party/gfootball_engine/src/onthepitch/teamAIcontroller.hpp
+@@ -58,6 +58,10 @@ class TeamAIController {
+     void CalculateSituation();
+ 
+     void UpdateTactics();
++    // PoC: coach override of position_defense_depth_factor (0..1). value < 0 clears it.
++    // Not part of ProcessState on purpose, so existing snapshots stay loadable.
++    void SetCoachDefenseDepth(float value);
++    float GetLiveDefenseDepth() const { return liveTeamTactics.GetReal("position_defense_depth_factor"); }
+ 
+     unsigned long GetEndApplyAttackingRun_ms() { DO_VALIDATION; return endApplyAttackingRun_ms; }
+     Player *GetAttackingRunPlayer() { DO_VALIDATION; return attackingRunPlayer; }
+@@ -86,6 +90,7 @@ class TeamAIController {
+     Properties liveTeamTactics;
+ 
+     float offensivenessBias = 0.0f;
++    float coachDefenseDepth = -1.0f;  // PoC override, < 0 == none
+ 
+     bool teamHasPossession = false;
+     bool teamHasUniquePossession = false;

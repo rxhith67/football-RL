@@ -1,0 +1,46 @@
+{
+ "frozen_on": "2026-10-12",
+ "status": "FROZEN before any confirmatory (seeds 1,000,000-1,000,199) match was played",
+ "evidence_used_to_write_this_spec": "development set only (seeds 1,100,000-1,100,029, n=30/policy) for measurement validity, noise and proxy recall; NOT for choosing a metric because Q looked good on it. Seeds 900000-900199 were already used for the earlier goal-difference test and are not used here.",
+ "policies": [
+  "native_unmodified",
+  "fixed_compact",
+  "fixed_stretched",
+  "hand_coach",
+  "random_switching",
+  "q_learning",
+  "q_learning_shuffled_obs(control)"
+ ],
+ "q_checkpoint": "checkpoints/q_it100_final.npz",
+ "q_sha256": "c54f3c63eae23dc8ed1d2ad79ecd5ddb5e1486917ff4ca858a43729918a34f17",
+ "n_matches_per_policy": 200,
+ "seeds": "1000000..1000199, identical for every policy",
+ "primary": {
+  "metric": "opp_def_third_steps",
+  "direction": "lower is better",
+  "contrast": "q_learning minus native_unmodified, paired by seed, two-sided, alpha=0.05",
+  "rationale": "proximal outcome of a defensive-depth coach (opponent possession time in our defensive third); continuous, CV 0.33 on dev; dev manipulation check shows the tactic moves it (compact 348 vs stretched 410 steps). Chosen on mechanism and measurement quality, not on Q's dev result.",
+  "dev_mde_80pct_power_n200": "about 36 steps (9% of mean)"
+ },
+ "secondary_metrics": [
+  "goals_against",
+  "goal_diff",
+  "poss_carry_share",
+  "recoveries_open",
+  "t_recover_mean",
+  "opp_box_entries",
+  "opp_shots_on_target",
+  "opp_shot_attempts"
+ ],
+ "secondary_rule": "Q vs native, sign-flip p-values Holm-adjusted across these 8; all other metrics are exploratory/descriptive whatever they show.",
+ "strongest_fixed_baseline_selected_on_dev": "fixed_compact",
+ "strongest_fixed_rule": "lowest dev mean of the primary metric among {native, fixed_compact, fixed_stretched}: compact 348 < native 401 < stretched 410. Also reported: the fixed policy best on the TEST mean per metric (favours the baseline).",
+ "metric_definitions": "stats_metrics.py (parameters P frozen at the values in that file at freeze time); min_spell=2; shot proxy thresholds as in P. Sensitivity to min_spell 1/3 and shot thresholds is reported, not used for selection.",
+ "state_dependence_test": "Q vs q_learning_shuffled_obs (same policy fed states drawn at random from its own visits) on every metric; plus NMI(action; zone x ownership x score x phase) above a permutation null.",
+ "decision_rules": {
+  "improves_a_statistic": "paired 95% CI vs native excludes 0 in the better direction AND (primary: p<0.05; secondary: Holm-adjusted p<0.05)",
+  "reflects_learned_state_dependent_adaptation": "improves vs native AND CI vs q_learning_shuffled_obs excludes 0 in the better direction AND CI vs strongest fixed baseline excludes 0 in the better direction",
+  "otherwise": "reported as not demonstrated; CIs give the smallest effects that cannot be excluded"
+ },
+ "uncertainty": "10,000-resample bootstrap over seeds (paired and unpaired), sign-flip permutation p; pooled time-to-regain uses a cluster bootstrap over matches"
+}
