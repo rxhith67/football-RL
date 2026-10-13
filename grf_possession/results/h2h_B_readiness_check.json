@@ -1,0 +1,135 @@
+{
+ "checkpoint": "checkpoints/q_possession_run1_it25.npz",
+ "sha256": "593c8eb958c430a0baf32cd8560bec8157e35bdb63183504f6b45bbbaeb198eb",
+ "checkpoint_facts": {
+  "main_checkpoint_iteration": 25,
+  "training_matches": 300,
+  "decisions": 9000,
+  "snapshot_table_equals_main_checkpoint_table": true,
+  "table_shape": [
+   243,
+   3
+  ],
+  "finite": true,
+  "algo": "q",
+  "reward": "possession"
+ },
+ "team_difficulty": {
+  "left": 1.0,
+  "right": 0.949999988079071,
+  "stat_multiplier_left": 1.0,
+  "stat_multiplier_right": 0.965,
+  "extra_reaction_time_ms_left": 0.0,
+  "extra_reaction_time_ms_right": 5.0,
+  "meaning": "right-team players have 3.5% lower skill statistics and 5 ms slower reactions; difficulty scales BOTH rosters' players regardless of who is coached"
+ },
+ "both_sides": {
+  "side0": {
+   "own_depth_matches_B_action_every_decision": true,
+   "opponent_depth_stays_native_0.71": true,
+   "possession_classes_sum_to_steps": true,
+   "ownership_label_matches_raw_engine_owner": true,
+   "controlled_share_first_600_steps": 0.41569767441860467,
+   "decisions": [
+    {
+     "decision": 1,
+     "action": 0,
+     "own_live_depth": 0.0,
+     "opp_live_depth": 0.71,
+     "share": 0.987012987012987
+    },
+    {
+     "decision": 2,
+     "action": 2,
+     "own_live_depth": 1.0,
+     "opp_live_depth": 0.71,
+     "share": 0.05405405405405406
+    },
+    {
+     "decision": 3,
+     "action": 0,
+     "own_live_depth": 0.0,
+     "opp_live_depth": 0.71,
+     "share": 0.01282051282051282
+    },
+    {
+     "decision": 4,
+     "action": 2,
+     "own_live_depth": 1.0,
+     "opp_live_depth": 0.71,
+     "share": 0.42424242424242425
+    },
+    {
+     "decision": 5,
+     "action": 0,
+     "own_live_depth": 0.0,
+     "opp_live_depth": 0.71,
+     "share": 1.0
+    },
+    {
+     "decision": 6,
+     "action": 0,
+     "own_live_depth": 0.0,
+     "opp_live_depth": 0.71,
+     "share": 0.06756756756756757
+    }
+   ]
+  },
+  "side1": {
+   "own_depth_matches_B_action_every_decision": true,
+   "opponent_depth_stays_native_0.71": true,
+   "possession_classes_sum_to_steps": true,
+   "ownership_label_matches_raw_engine_owner": true,
+   "controlled_share_first_600_steps": 0.6337662337662338,
+   "decisions": [
+    {
+     "decision": 1,
+     "action": 0,
+     "own_live_depth": 0.0,
+     "opp_live_depth": 0.71,
+     "share": 0.47297297297297297
+    },
+    {
+     "decision": 2,
+     "action": 0,
+     "own_live_depth": 0.0,
+     "opp_live_depth": 0.71,
+     "share": 0.4794520547945205
+    },
+    {
+     "decision": 3,
+     "action": 0,
+     "own_live_depth": 0.0,
+     "opp_live_depth": 0.71,
+     "share": 0.974025974025974
+    },
+    {
+     "decision": 4,
+     "action": 0,
+     "own_live_depth": 0.0,
+     "opp_live_depth": 0.71,
+     "share": 0.7878787878787878
+    },
+    {
+     "decision": 5,
+     "action": 2,
+     "own_live_depth": 1.0,
+     "opp_live_depth": 0.71,
+     "share": 0.8392857142857143
+    },
+    {
+     "decision": 6,
+     "action": 1,
+     "own_live_depth": 0.71,
+     "opp_live_depth": 0.71,
+     "share": 0.0
+    }
+   ]
+  }
+ },
+ "reproduces_earlier_independent_run_first_10_decisions": {
+  "actions_identical": true,
+  "interval_possession_identical": true
+ },
+ "all_checks_passed": true
+}

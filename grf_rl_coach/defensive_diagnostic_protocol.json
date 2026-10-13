@@ -1,0 +1,23 @@
+{
+  "label": "exploratory defensive-state diagnostic; separate from final full-match test",
+  "source_scenario": "11_vs_11_hard_stochastic",
+  "source_seed_start": 1200000,
+  "source_seed_attempts_max": 90,
+  "snapshots_per_category": 10,
+  "one_snapshot_per_source_seed": true,
+  "categories": ["midfield", "penalty", "wide"],
+  "snapshot_step_min": 100,
+  "snapshot_step_max": 2600,
+  "rollout_horizon_engine_steps": 200,
+  "coach_decision_interval_engine_steps": 100,
+  "replicate_processes": 3,
+  "replicate_seed_start": 1300000,
+  "policies": ["native", "compact", "stretched", "hand", "random", "q"],
+  "checkpoint": "checkpoints/q_it100_final.npz",
+  "checkpoint_sha256": "c54f3c63eae23dc8ed1d2ad79ecd5ddb5e1486917ff4ca858a43729918a34f17",
+  "bootstrap_resamples": 10000,
+  "bootstrap_seed": 1400000,
+  "primary_metric": "opponent ball advancement toward our goal before recovery or first goal conceded; lower is better",
+  "secondary_metrics": ["recovery rate", "censored steps to recovery", "dangerous entries", "shot-like release proxy", "goals conceded", "goal difference"],
+  "interpretation": "Exploratory episode-level diagnostics only; no policy selection or tuning from these states. Full-match held-out test remains separate."
+}
