@@ -43,8 +43,15 @@ def f2(x, c, p=2, sign=True):
 
 
 by = {}
-for f in sorted(glob.glob(str(R / FOLDER / "*.pkl"))):
-    by[Path(f).stem] = {(ep["seed"], ep["side"]): ep for ep, _ in pickle.load(open(f, "rb"))}
+if FOLDER.endswith(".csv"):        # reference/final100_per_match.csv: the same matches without the heavy raw files
+    import csv
+    for r in csv.DictReader(open(FOLDER)):
+        by.setdefault(r["policy"], {})[(int(r["seed"]), int(r["side"]))] = dict(
+            seed=int(r["seed"]), side=int(r["side"]), goals_for=float(r["goals_for"]), goals_against=float(r["goals_against"]),
+            goal_diff=float(r["goal_diff"]), possession_share=float(r["possession_share"]))
+else:
+    for f in sorted(glob.glob(str(R / FOLDER / "*.pkl"))):
+        by[Path(f).stem] = {(ep["seed"], ep["side"]): ep for ep, _ in pickle.load(open(f, "rb"))}
 labels = [l for l in ORDER if l in by]
 seeds = sorted({s for l in labels for s, sd in by[l] if sd == 0}); n = len(seeds)
 for l in labels: assert all((s, sd) in by[l] for s in seeds for sd in (0, 1)), f"{l} incomplete"
